@@ -9,18 +9,27 @@ def process_file(in_file, name):
     out_files = dict()
     count = 0
 
-    for event, node in etree.iterparse(in_file, tag='text'):
-        year = node.attrib['date'][:4]
-        text = "".join([x for x in node.itertext()]).replace("\n", " ").strip()
+    for event, elem in etree.iterparse(in_file, tag='text'):
+        try:
+            year = elem.attrib['date'][:4]
+        except:
+            year = elem.attrib['year']
         if year not in out_files:
             out_file = codecs.open('{}/output/{}-{}.txt'.format(args.dir, year, name), 'w', 'utf-8')
             out_files[year] = out_file
             out_file.write(year + '\n')
         else:
             out_file = out_files[year]
-        out_file.write(text + '\n')
-        count += 1
-        if count % 10000 == 0: print(count)
+        for sentence in elem:
+            text = "".join([x for x in sentence.itertext()]).replace("\n", " ").strip()
+            out_file.write(text + '\n')
+            count += 1
+            if count % 50000 == 0:
+                print(name, count)
+        elem.clear()
+        for ancestor in elem.xpath('ancestor-or-self::*'):
+            while ancestor.getprevious() is not None:
+                del ancestor.getparent()[0]
 
     for out_file in out_files.values():
         out_file.close()
@@ -41,7 +50,7 @@ for filename in os.listdir(in_dir):
         elif filename.endswith(".bz2"):
             with BZ2File(in_dir + filename) as xml_file:
                 process_file(xml_file, nice_name)
-    except:
-        print('Error!')
+    except Exception as e:
+        print('Error!', e)
     else:
         continue
