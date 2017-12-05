@@ -1,3 +1,4 @@
+import argparse
 import os
 from lxml import etree
 from bz2 import BZ2File
@@ -12,19 +13,24 @@ def process_file(in_file):
         year = node.attrib['date'][:4]
         text = "".join([x for x in node.itertext()]).replace("\n", " ").strip()
         if year not in out_files:
-            out_file = codecs.open('/Users/xx/Downloads/st_data/output/{}.txt'.format(year), 'a', 'utf-8')
+            out_file = codecs.open('{}/output/{}.txt'.format(args.dir, year), 'a', 'utf-8')
             out_files[year] = out_file
         else:
             out_file = out_files[year]
         out_file.write(text + '\n')
         count += 1
-        if count % 1000 == 0: print(count)
+        if count % 10000 == 0: print(count)
 
     for out_file in out_files.values():
         out_file.close()
 
 
-out_dir = '/Users/xx/Downloads/st_data/input/'
+parser = argparse.ArgumentParser(description='Parse GU Corpora.')
+parser.add_argument('dir', type=str, help='directory with input and output subdirectories')
+
+args = parser.parse_args()
+
+out_dir = args.dir + '/input/'
 for filename in os.listdir(out_dir):
     try:
         print(filename)
