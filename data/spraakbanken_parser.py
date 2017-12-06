@@ -75,7 +75,11 @@ if args.stats:
             year = int(file.readline())
             num_lines = sum(1 for line in file)
             years[year] += num_lines
-    plt.bar(list(years.keys()), years.values(), color='g')
+    decades = defaultdict(int)
+    for year, count in years.items():
+        decades[year // 10 * 10] += count
+    print(decades)
+    plt.bar(list(decades.keys()), decades.values(), color='g')
     plt.yscale('log', nonposy='clip')
     plt.show()
 
