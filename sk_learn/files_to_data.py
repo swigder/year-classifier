@@ -22,7 +22,7 @@ def targets(data):
         return list(itertools.chain.from_iterable([[target] * len(items) for target, items in data.items()]))
 
 
-def read_data(data_dir, max_samples_per_period, period_length, filter=None):
+def read_data(data_dir, max_samples_per_period, period_length, min_sample_size=None):
     train = defaultdict(list)
     test = defaultdict(list)
 
@@ -32,10 +32,18 @@ def read_data(data_dir, max_samples_per_period, period_length, filter=None):
         with codecs.open(data_dir + filename, 'r', 'utf-8') as file:
             year = int(file.readline())
             year = year // period_length * period_length
-            if filter:
-                lines = [line for line in file.readlines() if (filter(line))]
-            else:
+            if min_sample_size is None:
                 lines = list(file.readlines())
+            else:
+                lines = []
+                current_line = ""
+                for line in file.readlines():
+                    if len(current_line) < min_sample_size and len(line) < min_sample_size:
+                        current_line += line
+                    else:
+                        lines.append(current_line)
+                        current_line = line
+                lines.append(current_line)
             split = int(len(lines) * .75)
             train[year] += lines[:split]
             test[year] += lines[split:]
