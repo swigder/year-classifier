@@ -17,7 +17,7 @@ def process_file(in_file, name):
         except:
             year = elem.attrib['year']
         if year not in out_files:
-            out_file = codecs.open('/{}-{}.txt'.format(out_dir, year, name), 'w', 'utf-8')
+            out_file = codecs.open('{}/{}-{}.txt'.format(out_dir, year, name), 'w', 'utf-8')
             out_files[year] = out_file
             out_file.write(year + '\n')
         else:
@@ -45,6 +45,7 @@ parser.add_argument('-s', '--stats', action='store_true')
 args = parser.parse_args()
 
 in_dir = args.dir + '/input/'
+out_dir = args.dir + '/output/'
 
 if args.parse:
     for filename in os.listdir(in_dir):
@@ -61,8 +62,6 @@ if args.parse:
         else:
             continue
 
-out_dir = args.dir + '/output/'
-
 if args.stats:
     import matplotlib.pyplot as plt
 
@@ -75,7 +74,11 @@ if args.stats:
             year = int(file.readline())
             num_lines = sum(1 for line in file)
             years[year] += num_lines
-    plt.bar(list(years.keys()), years.values(), color='g')
+    decades = defaultdict(int)
+    for year, count in years.items():
+        decades[year // 10 * 10] += count
+    print(decades)
+    plt.bar(list(decades.keys()), decades.values(), color='g')
     plt.yscale('log', nonposy='clip')
     plt.show()
 
