@@ -39,7 +39,7 @@ class Format:
         labels = sorted(list(set(labels)))
         return (x, y, unique_words, labels)
 
-    def get_formated_data(self):
+    def get_formated_data(self, offset):
         x, y, unique_words, labels = self.get_input_output()
         print(labels)
         #print(unique_words[1:100])
@@ -47,8 +47,9 @@ class Format:
         word_to_ind={}
         ind_to_word={}
         for index, word in enumerate(unique_words):
-            word_to_ind[word]=index
-            ind_to_word[index]=word
+            i=index+offset
+            word_to_ind[word]=i
+            ind_to_word[i]=word
 
         #unique_words=dict.fromkeys(unique_words, 0)
         new_x=self.convert_to_indices(x, word_to_ind)

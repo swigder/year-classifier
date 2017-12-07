@@ -1,0 +1,1 @@
+Tried running a LSTM network with word embedding. 300 word-embedding features seem to be a good number based on some papers (https://arxiv.org/pdf/1509.01626.pdf). Bidirectional LSTM overfits on 10000 samples
