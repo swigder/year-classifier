@@ -17,7 +17,7 @@ def process_file(in_file, name):
         except:
             year = elem.attrib['year']
         if year not in out_files:
-            out_file = codecs.open('/{}-{}.txt'.format(out_dir, year, name), 'w', 'utf-8')
+            out_file = codecs.open('{}/{}-{}.txt'.format(out_dir, year, name), 'w', 'utf-8')
             out_files[year] = out_file
             out_file.write(year + '\n')
         else:
@@ -45,6 +45,7 @@ parser.add_argument('-s', '--stats', action='store_true')
 args = parser.parse_args()
 
 in_dir = args.dir + '/input/'
+out_dir = args.dir + '/output/'
 
 if args.parse:
     for filename in os.listdir(in_dir):
@@ -60,8 +61,6 @@ if args.parse:
             print('Error!', e)
         else:
             continue
-
-out_dir = args.dir + '/output/'
 
 if args.stats:
     import matplotlib.pyplot as plt

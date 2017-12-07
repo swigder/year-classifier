@@ -9,7 +9,7 @@ import re
 def clean_too_long(line):
     if len(line) < 1000:
         return False, line
-    split = re.split('(?<=\.)\s+', line)
+    split = re.split('(?<=[.;])\s+', line)
     return len(split) > 1, split
 
 
