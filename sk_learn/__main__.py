@@ -26,13 +26,12 @@ parser.add_argument('-t', '--model_type', default=DEFAULT_MODEL_TYPE,
                     help='type of model')
 
 args = parser.parse_args()
-out_dir = args.dir + '/output/'
 
 start_time = time.time()
-data = read_data(out_dir, args.max_samples, args.period, args.min_sample)
+data = read_data(args.dir, args.max_samples, args.period, args.min_sample)
 print('Read data in {:.2f} seconds.'.format(time.time() - start_time))
 
-model = Model(type=args.model_type)
+model = Model(model_type=args.model_type)
 model.train(data.train)
 model.visualize()
 model.test(data.test)
