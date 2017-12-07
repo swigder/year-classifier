@@ -31,6 +31,8 @@ def read_data(data_dir, max_samples_per_period, period_length, min_sample_size=N
             continue
         with codecs.open(data_dir + filename, 'r', 'utf-8') as file:
             year = int(file.readline())
+            if year < 1780:
+                continue
             year = year // period_length * period_length
             if min_sample_size is None:
                 lines = list(file.readlines())
@@ -38,6 +40,9 @@ def read_data(data_dir, max_samples_per_period, period_length, min_sample_size=N
                 lines = []
                 current_line = ""
                 for line in file.readlines():
+                    # alpha = sum([1 for char in line if char.isalpha()])
+                    # if alpha < len(line) / 2:
+                    #     continue
                     if len(current_line) < min_sample_size and len(line) < min_sample_size:
                         current_line += line
                     else:
