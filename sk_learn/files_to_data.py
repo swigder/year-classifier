@@ -36,7 +36,7 @@ def read_dir_into_dict(data_dir, max_samples_per_period=None, min_sample_size=No
             for line in file.readlines():
                 if max_samples_per_period and len(lines) > max_samples_per_period:
                     break
-                if len(current_line) < min_sample_size and len(line) < min_sample_size:
+                if min_sample_size is not None and len(current_line) < min_sample_size and len(line) < min_sample_size:
                     current_line += line
                 else:
                     lines.append(current_line)
