@@ -9,8 +9,17 @@ import re
 def clean_too_long(line):
     if len(line) < 1000:
         return False, line
-    split = re.split('(?<=[.;])\s+', line)
-    return len(split) > 1, split
+    output_lines = []
+    line_start = 0
+    for line_end in range(len(line)):
+        if not line[line_end] in ['.', ';']:
+            continue
+        if (line[line_end+1] == ' ' or line[line_end+1].isupper()) and line_end - line_start > 10:
+            output_lines.append(line[line_start:line_end+1].strip() + '\n')
+            line_start = line_end + 1
+    if line_start != len(line):
+        output_lines.append(line[line_start:].strip() + '\n')
+    return len(output_lines) > 1, output_lines
 
 
 def clean_junk(line):
@@ -25,10 +34,13 @@ def process_file(dir, filename, old_data_dir, clean_fn):
     with codecs.open(path, 'r', 'utf-8') as file:
         will_clean = False
         output_lines = [file.readline()]
+        input_line_count = 0
         for line in file.readlines():
+            input_line_count += 1
             is_dirty_line, clean_lines = clean_fn(line)
             output_lines += clean_lines
             will_clean |= is_dirty_line
+        print('Input line count: {}, output line count: {}'.format(input_line_count, len(output_lines)))
     if will_clean:
         print('Need to rewrite file {}!'.format(filename))
         os.rename(path, old_data_dir + filename)

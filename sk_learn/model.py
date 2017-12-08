@@ -47,12 +47,14 @@ class Model:
         predicted = self.text_clf.predict(inputs)
 
         df = pd.DataFrame(data={'actual': test.targets, 'predicted': predicted})
-        for k, v in df.where(df.actual == df.predicted).groupby([df.actual, df.predicted]).groups.items():
+        for k, v in df.groupby([df.actual, df.predicted]).groups.items():
             print(k, inputs[v[0]])
+        correct_count = df.where(df.actual == df.predicted).count()[0]
 
         print()
+        print('Accuracy: {:.4f} ({} / {})\n'.format(correct_count / len(inputs), correct_count, len(inputs)))
         print(metrics.classification_report(test.targets, predicted))
-        print(metrics.confusion_matrix(test.targets, predicted))
+        print(metrics.confusion_matrix(test.targets, predicted, list(sorted(set(test.targets)))))
 
     def visualize(self):
         print()
@@ -62,7 +64,8 @@ class Model:
         if self.model_type == self.SGD_CLASSIFER:
             for target, coeffs in enumerate(self.text_clf.named_steps['clf'].coef_):
                 top = np.argsort(coeffs)[-10:]
-                print(u"{}\n{}".format(target, u"\n".join([u"{} {}".format(v[i], coeffs[i]) for i in top])))
+                print(u"{}\n{}".format(self.text_clf.named_steps['clf'].classes_[target],
+                                       u"\n".join([u"{} {}".format(v[i], coeffs[i]) for i in top])))
         elif self.model_type == self.MLP_CLASSIFER:
             for target, out_layer in enumerate(self.text_clf.named_steps['clf'].coefs_[1].T):
                 max_node = np.argmax(out_layer)
