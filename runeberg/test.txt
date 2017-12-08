@@ -1,0 +1,33 @@
+def metrics(pred, real):
+    C=pred.shape[1]
+    confusion_matrix=[[0 for i in range(C)] for i in range(C)]
+    corr=0
+    test=0
+    for i, data_point in enumerate(pred):
+        pr=np.argmax(data_point)
+        rr=np.argmax(real[i])
+        confusion_matrix[pr][rr]+=1
+
+    metrics=[]
+    print(confusion_matrix)
+    for c in range(C):
+        TP=confusion_matrix[c][c]
+        TN=sum([confusion_matrix[i][j] for i in range(C) for j in range(C) if j != c and i!=c])
+        FP=sum([confusion_matrix[j][c] for j in range(C) if j!=c ])
+        FN=sum([confusion_matrix[c][j] for j in range(C) if j!=c ])
+        metrics.append((TP, TN, FP, FN))
+
+    acc=corr/test
+    print("accuracy={}".format(acc))
+    for c in range(C):
+        name=self.training_set.cat_name[c]
+        m=metrics[c]
+        # precision = number of positives (predicted class cat) / (number of positives (predicted class cat) + number of incorrectly predicted positives (predicted cats for non-cats))
+        precision=m[0]/(m[0]+m[2])
+        # recall = number of positives (predicted class cat) / number of all positives (cats), how many we got out of all possible ones
+        recall=m[0]/(m[0]+m[3])
+        acc=(m[0]+m[1])/(sum(m))
+        print("{}: accuracy={}, precision={}, recall={}, TP={}, TN={}, FP={}, FN={}".format(name, acc, precision, recall, m[0], m[1], m[2], m[3]))
+
+metrics()
+
