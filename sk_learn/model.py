@@ -15,7 +15,8 @@ class Model:
 
     def __init__(self, model_type):
         self.model_type = model_type
-        self.text_clf = Pipeline([('vect', CountVectorizer(max_df=.95, min_df=10)),
+        self.text_clf = Pipeline([('vect', CountVectorizer(max_df=.95, min_df=10,
+                                                           token_pattern=r"(?u)\b[A-ZÅÄÖa-zåäö][A-ZÅÄÖa-zåäö]+\b")),
                                   ('tfidf', TfidfTransformer()),
                                   ('clf', self.get_model(model_type))
                                   # ('clf', MLPRegressor(solver='lbfgs', alpha=1e-5,
