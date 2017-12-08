@@ -3,7 +3,7 @@ from keras.optimizers import Adam
 from keras.preprocessing import sequence
 from keras.models import Sequential
 from keras import regularizers
-from keras.layers import Embedding, Dense, Activation, LSTM, BatchNormalization, Bidirectional, Conv1D, Flatten, MaxPooling1D, AveragePooling1D, Dropout, Input
+from keras.layers import Embedding, Dense, Activation, LSTM, BatchNormalization, Bidirectional, Conv1D, Flatten, MaxPooling1D, AveragePooling1D, Dropout, Input, Concatenate
 from keras.models import load_model, Model
 
 import numpy as np
@@ -54,17 +54,30 @@ features=300
 lmo=load_model('emb_model.h5')
 
 #model = Sequential()
-inputs=Input(shape=(timesteps, features))
+inputs=Input(shape=(timesteps, ))
 #model.add(Embedding(len(word_to_ind), features, input_length=timesteps))
-model.add(Embedding(len(word_to_ind), features, input_length=timesteps, name='emb_layer', trainable=False, weights=lmo.get_layer('emb_layer').get_weights()))
+layer=Embedding(len(word_to_ind), features, input_length=timesteps, name='emb_layer', trainable=False, weights=lmo.get_layer('emb_layer').get_weights())(inputs)
 
 # the model will take as input an integer matrix of size (batch, input_length).
 # the largest integer (i.e. word index) in the input should be no larger than 999 (vocabulary size).
 # now model.output_shape == (None, 10, 64), where None is the batch dimension.
 
 #model.add(Masking(mask_value=0., input_shape=(timesteps, features)))
-model.add(Conv1D(128, 3, activation='relu',kernel_regularizer=regularizers.l2(0.01)))
-model.add(AveragePooling1D())
+#layer1=Conv1D(64, 3, activation='relu',kernel_regularizer=regularizers.l2(0.01))(layer)
+#layer1=Conv1D(64, 1, activation='relu',kernel_regularizer=regularizers.l2(0.01))(layer1)
+#layer1=Conv1D(64, 3, activation='relu',kernel_regularizer=regularizers.l2(0.01))(layer1)
+#layer1=AveragePooling1D()(layer1)
+
+layer2=Conv1D(128, 3, activation='relu')(layer)
+layer2=MaxPooling1D()(layer2)
+#layer2=AveragePooling1D()(layer2)
+layer2=Conv1D(128, 1, activation='relu')(layer2)
+layer2=MaxPooling1D()(layer2)
+#layer2=AveragePooling1D()(layer2)
+layer2=Conv1D(128, 3, activation='relu')(layer2)
+layer2=MaxPooling1D()(layer2)
+
+layer=layer2 #Concatenate()([layer1, layer2])
 #model.add(Conv1D(64, 3, activation='relu',kernel_regularizer=regularizers.l2(0.01)))
 #model.add(MaxPooling1D())
 #model.add(AveragePooling1D())
@@ -72,11 +85,11 @@ model.add(AveragePooling1D())
 #model.add(AveragePooling1D())
 #model.add(Conv1D(8, 3, activation='relu',kernel_regularizer=regularizers.l2(0.01)))
 #model.add(AveragePooling1D())
-model.add(Flatten())
-model.add(BatchNormalization())
-model.add(Dropout(0.5))
-model.add(Dense(14, activation='softmax',kernel_regularizer=regularizers.l2(0.01)))
-
+layer=Flatten()(layer)
+layer=BatchNormalization()(layer)
+layer=Dropout(0.5)(layer)
+predictions=Dense(14, activation='softmax',kernel_regularizer=regularizers.l2(0.01))(layer)
+model=Model(inputs=inputs, outputs=predictions)
 #input_array = np.random.randint(1000, size=(32, 10))
 
 opt=Adam(lr=LEARNING_RATE, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)

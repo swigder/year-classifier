@@ -3,6 +3,9 @@ import os
 
 class Format:
 
+    def __init__(self, filename):
+        self.filename=filename
+
     def convert_to_indices(self, z, unique_words):
         new_z=[]
         for z_i in z:
@@ -12,7 +15,7 @@ class Format:
 
 
     def get_input_output(self):
-        folder_path='data/formated'
+        folder_path=self.filename
         files=os.listdir(folder_path)
         x=[]
         y=[]
