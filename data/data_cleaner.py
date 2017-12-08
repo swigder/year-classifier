@@ -3,21 +3,19 @@ import codecs
 
 import os
 
-import re
-
 
 def clean_too_long(line):
     if len(line) < 1000:
         return False, line
     output_lines = []
     line_start = 0
-    for line_end in range(len(line)):
+    for line_end in range(len(line)-1):
         if not line[line_end] in ['.', ';']:
             continue
         if (line[line_end+1] == ' ' or line[line_end+1].isupper()) and line_end - line_start > 10:
             output_lines.append(line[line_start:line_end+1].strip() + '\n')
             line_start = line_end + 1
-    if line_start != len(line):
+    if line_start < len(line):
         output_lines.append(line[line_start:].strip() + '\n')
     return len(output_lines) > 1, output_lines
 
