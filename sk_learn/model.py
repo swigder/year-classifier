@@ -41,6 +41,8 @@ class Model:
     def train(self, training):
         self.text_clf.fit(training.inputs, training.targets)
 
+        print('Vocabulary size: ', len(self.text_clf.named_steps['vect'].vocabulary_))
+
     def test(self, test):
         inputs = list(test.inputs)
 
