@@ -29,6 +29,9 @@ def generate_dataset(readers, samples, interval_test):
         i += 1
         remaining_files = [file for file in remaining_files if file not in exhausted_files]
 
+    if len(remaining_files) == 0:
+        print('Exhausted dataset!')
+
     print(len(training), len(test), len(training) + len(test), '\n')
     return training, test
 
@@ -53,7 +56,7 @@ parser.add_argument('-smax', '--sample_max', type=int, default=2000, help='max c
 args = parser.parse_args()
 
 
-dataset_dir = "{}/dataset-{}-{}".format(args.dir, args.period, args.samples)
+dataset_dir = "{}/dataset-{}-{}-{}-{}".format(args.dir, args.period, args.samples, args.sample_min, args.sample_max)
 training_dir = "{}/training".format(dataset_dir)
 test_dir = "{}/test".format(dataset_dir)
 os.makedirs(training_dir, exist_ok=True)
@@ -74,8 +77,8 @@ for period in range(first_decade, last_decade + 1, args.period):
         file = codecs.open(path, 'r', 'utf-8')
         file.readline()  # get rid of 'year' line
         file_readers.append(file)
-        print('Reading file {}'.format(filename))
-    print('Processing period {}0...\n'.format(period))
+        # print('Reading file {}'.format(filename))
+    print('Processing period {}0...'.format(period))
     training_sentences, test_sentences = generate_dataset(file_readers, args.samples * args.period, args.test)
     for file in file_readers:
         file.close()

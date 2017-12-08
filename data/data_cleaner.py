@@ -59,13 +59,12 @@ old_data_dir = args.dir + "/{}/".format(args.cleanup_type)
 os.makedirs(old_data_dir, exist_ok=True)
 
 for filename in os.listdir(args.dir):
-    if filename.endswith(".txt"):
-        try:
-            print(filename)
-            nice_name = filename.split('.')[0]
-            if filename.endswith(".txt"):
-                process_file(args.dir, filename, old_data_dir, fns[args.cleanup_type])
-        except Exception as e:
-            print('Error!', e)
-    else:
+    if not filename.endswith(".txt"):
         continue
+    try:
+        print(filename)
+        nice_name = filename.split('.')[0]
+        if filename.endswith(".txt"):
+            process_file(args.dir, filename, old_data_dir, fns[args.cleanup_type])
+    except Exception as e:
+        print('Error!', e)
