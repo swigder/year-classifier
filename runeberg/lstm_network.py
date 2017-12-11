@@ -20,7 +20,8 @@ LEARNING_RATE=0.0005
 BATCH_SIZE=32
 
 # Load data
-x, y, word_to_ind, ind_to_word, labels=Format('data/formated').get_formated_data(1)
+x, y, word_to_ind, ind_to_word, labels=Format('/tmp/dataset-2-10000/training').get_formated_data(0)
+x_test, y_test, word_to_ind_test, ind_to_word_test, labels_test=Format('/tmp/dataset-2-10000/test').get_formated_data(0)
 
 y_new=np.zeros((len(y), len(labels)))
 

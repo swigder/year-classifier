@@ -1,5 +1,8 @@
 #from keras.preprocessing.text import text_to_word_sequence, one_hot
 import os
+from os.path import join, isfile
+from sklearn.feature_extraction.text import CountVectorizer
+import re
 
 class Format:
 
@@ -17,30 +20,38 @@ class Format:
     def get_input_output(self):
         folder_path=self.filename
         files=os.listdir(folder_path)
-        x=[]
-        y=[]
+        files=[fn for fn in files if isfile(join(folder_path,fn))]
+        data=[]
         labels=set()
-        unique_words=set()
+        sentences=[]
         for filename in files:
             path='{}/{}'.format(folder_path,filename)
             with open(path) as f:
+                year=f.readline()[:-1]
                 text=f.read()
 
-            lines=text.split('\n')
-            year=lines[0]
+            sentences+=text.split('\n')
+            data.append((year, text))
             labels.add(year)
 
-            sentences=lines[1:]
+
+        print("len {}".format(len(sentences)))
+        x=[]
+        y=[]
+
+        count_vec=CountVectorizer(max_df=.95, min_df=30, token_pattern=r"(?u)\b[A-ZÅÄÖa-zåäö][A-ZÅÄÖa-zåäö]+\b")
+        count_vec.fit(sentences)
+        vocab=count_vec.vocabulary_
+        tokenizer=count_vec.build_tokenizer()
+        for d in data:
             # Split all sentences into lists of words, if-statement is to remove empty strings
-            split_sentences=[[w for w in s.split(' ') if w!=''] for s in sentences]
-            unique_words.update([w for s in split_sentences for w in s])
+            split_sentences=[[w for w in tokenizer(s) if w in vocab] for s in d[1].split('\n')]
             #print(year, len(sentences))
             x=x+split_sentences
-            y=y+[[year] for i in range(len(split_sentences))]
-            #print(len(x), len(y))
+            y=y+[[d[0]] for i in range(len(split_sentences))]
 
         labels = sorted(list(set(labels)))
-        return (x, y, unique_words, labels)
+        return (x, y, vocab, labels)
 
     def get_formated_data(self, offset):
         x, y, unique_words, labels = self.get_input_output()
@@ -49,7 +60,7 @@ class Format:
         #print(x[0:4])
         word_to_ind={}
         ind_to_word={}
-        for index, word in enumerate(unique_words):
+        for index, word in enumerate(unique_words.keys()):
             i=index+offset
             word_to_ind[word]=i
             ind_to_word[i]=word

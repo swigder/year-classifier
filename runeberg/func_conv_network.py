@@ -10,6 +10,7 @@ import numpy as np
 import os
 from sklearn.metrics import confusion_matrix
 import datetime
+from collections import Counter
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 np.set_printoptions(threshold=np.nan)
@@ -17,15 +18,78 @@ np.set_printoptions(threshold=np.nan)
 from format_in_out import Format
 
 NUM_EPOCHS=10
-BATCH_SIZE=32
+BATCH_SIZE=64
 LEARNING_RATE=0.001
 TRAIN_SIZE=10000
-TEST_SIZE=2000
+VAL_SIZE=8000
+TEST_SIZE=8000
 
 
 # Load data
-#x, y, word_to_ind, ind_to_word, labels=Format('/tmp/formated_data_small').get_formated_data(0)
-x, y, word_to_ind, ind_to_word, labels=Format('data/formated').get_formated_data(0)
+#x, y, word_to_ind, ind_to_word, labels=Format('/tmp/dataset-1/training').get_formated_data(0)
+#x_test, y_test, word_to_ind_test, ind_to_word_test, labels_test=Format('/tmp/dataset-1/test').get_formated_data(0)
+data_folder_name='/tmp/dataset-p2-s10000-min100-max1000'
+x, y, word_to_ind, ind_to_word, labels=Format(data_folder_name+'/training').get_formated_data(0)
+x_test, y_test, word_to_ind_test, ind_to_word_test, labels_test=Format(data_folder_name+'/test').get_formated_data(0)
+TEST_SIZE=len(x_test)
+print("vocab = {}".format(len(word_to_ind)))
+#x, y, word_to_ind, ind_to_word, labels=Format('data/formated').get_formated_data(0)
+
+"""
+max_len=100
+new_x=[]
+new_y=[]
+for i, x_i in enumerate(x):
+    #print(len(x_i))
+    if len(x_i)>max_len:
+        nl=[x_i[i:i+max_len] for i in range(0, len(x_i), max_len)]
+        new_x+=nl
+        new_y+=[y[i]]*len(nl)
+    else:
+        new_x.append(x_i)
+        new_y.append(y[i])
+
+print(len(new_x))
+print(len(new_y))
+print("max len = "+str(max_len))
+
+x=new_x
+y=new_y
+"""
+
+# Compute document frequency
+"""
+df={i: 0 for i in ind_to_word.keys()}
+se=[]
+for x_i in x:
+    se.append(set(x_i))
+
+for i, ind in enumerate(ind_to_word.keys()):
+    for j in se:
+        if ind in j:
+            df[ind]+=1
+            """
+
+"""
+#calculate words frequencies per document
+word_frequencies = [Counter(x_i) for x_i in x]
+#print(word_frequencies)
+
+#calculate document frequency
+df= {i: 0 for i in ind_to_word}
+for word_frequency in word_frequencies:
+    for wf in word_frequency.keys():
+        df[wf]+=1
+    
+        
+print("before {}".format(len(df)))
+df={f:0 for f in df.keys() if df[f]>5}
+print("after {}".format(len(df)))
+new_x=[]
+for x_i in x:
+    new_x.append([w for w in x_i if w in df])
+x=new_x
+"""
 
 y_new=np.zeros((len(y), len(labels)))
 
@@ -41,22 +105,23 @@ perm=np.random.permutation(x.shape[0])
 x=x[perm]
 y=y[perm]
 
-x_test=x[0:TEST_SIZE]
-y_test=y[0:TEST_SIZE]
+x_val=x[0:VAL_SIZE]
+y_val=y[0:VAL_SIZE]
 #print(x_test)
 #print(y_test)
-x=x[TEST_SIZE:TEST_SIZE+TRAIN_SIZE]
-y=y[TEST_SIZE:TEST_SIZE+TRAIN_SIZE]
-#print(x.shape)
+x=x[VAL_SIZE:]
+y=y[VAL_SIZE:]
+print(x.shape)
 timesteps=x.shape[1]
-features=300
+features=100
 
 lmo=load_model('emb_model.h5')
 
 #model = Sequential()
 inputs=Input(shape=(timesteps, ))
 #model.add(Embedding(len(word_to_ind), features, input_length=timesteps))
-layer=Embedding(len(word_to_ind), features, input_length=timesteps, name='emb_layer', trainable=False, weights=lmo.get_layer('emb_layer').get_weights())(inputs)
+layer=Embedding(len(word_to_ind), features, input_length=timesteps, name='emb_layer')(inputs)
+#layer=Embedding(len(word_to_ind), features, input_length=timesteps, name='emb_layer', trainable=False, weights=lmo.get_layer('emb_layer').get_weights())(inputs)
 
 # the model will take as input an integer matrix of size (batch, input_length).
 # the largest integer (i.e. word index) in the input should be no larger than 999 (vocabulary size).
@@ -70,12 +135,14 @@ layer=Embedding(len(word_to_ind), features, input_length=timesteps, name='emb_la
 
 layer2=Conv1D(128, 3, activation='relu')(layer)
 layer2=MaxPooling1D()(layer2)
+"""
 #layer2=AveragePooling1D()(layer2)
 layer2=Conv1D(128, 1, activation='relu')(layer2)
 layer2=MaxPooling1D()(layer2)
 #layer2=AveragePooling1D()(layer2)
 layer2=Conv1D(128, 3, activation='relu')(layer2)
 layer2=MaxPooling1D()(layer2)
+"""
 
 layer=layer2 #Concatenate()([layer1, layer2])
 #model.add(Conv1D(64, 3, activation='relu',kernel_regularizer=regularizers.l2(0.01)))
@@ -86,9 +153,9 @@ layer=layer2 #Concatenate()([layer1, layer2])
 #model.add(Conv1D(8, 3, activation='relu',kernel_regularizer=regularizers.l2(0.01)))
 #model.add(AveragePooling1D())
 layer=Flatten()(layer)
-layer=BatchNormalization()(layer)
+#layer=BatchNormalization()(layer)
 layer=Dropout(0.5)(layer)
-predictions=Dense(14, activation='softmax',kernel_regularizer=regularizers.l2(0.01))(layer)
+predictions=Dense(len(labels), activation='softmax',kernel_regularizer=regularizers.l2(0.01))(layer)
 model=Model(inputs=inputs, outputs=predictions)
 #input_array = np.random.randint(1000, size=(32, 10))
 
@@ -99,6 +166,19 @@ print("time: {}, epochs: {}, learning rate: {}, training size: {}, test size: {}
 print(model.summary())
 
 model.fit(x, y, epochs=NUM_EPOCHS, batch_size=BATCH_SIZE, validation_split=0.2)
+"""
+k=0
+for i in range(3):
+    print("Epoch = {}".format(i))
+    for x_i, y_i in zip(x,y):
+        model.train_on_batch(np.array([x_i]), np.reshape(np.array(y_i), (1, len(labels))))
+        if k%1000==0:
+            score,acc=model.evaluate(x_val,  y_val, batch_size=1)
+            print('score = {}, accuracy = {}'.format(score, acc))
+
+        k+=1
+        print(k)
+        """
 
 out=model.predict(x_test)
 #print(out[0:100])
@@ -111,6 +191,8 @@ print(lab[0:100])
 print(pred_lab[0:100])
 conf_matrix=confusion_matrix(lab, pred_lab)
 print(conf_matrix)
+print(metrics.classification_report(test.targets, predicted))
+
 
 """
 tot=np.sum(np.sum(confusion))

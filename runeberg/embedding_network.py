@@ -1,4 +1,5 @@
 from keras.layers.core import Masking
+from keras.utils import to_categorical
 from keras.optimizers import Adam
 from keras.preprocessing import sequence
 from keras.models import Sequential
@@ -8,6 +9,7 @@ import numpy as np
 from keras.models import load_model
 import os
 from sklearn.metrics import confusion_matrix
+from sklearn.preprocessing import OneHotEncoder
 import datetime
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
@@ -15,7 +17,7 @@ np.set_printoptions(threshold=np.nan)
 
 from format_in_out import Format
 
-NUM_EPOCHS=3
+NUM_EPOCHS=10
 BATCH_SIZE=32
 LEARNING_RATE=0.001
 TRAIN_SIZE=36000
@@ -23,7 +25,12 @@ TEST_SIZE=200
 
 
 # Load data
-x, y, word_to_ind, ind_to_word, labels=Format('/tmp/formated_data_small').get_formated_data(0)
+#x, y, word_to_ind, ind_to_word, labels=Format('/tmp/dataset-1/training').get_formated_data(0)
+#x_test, y_test, word_to_ind_test, ind_to_word_test, labels_test=Format('/tmp/dataset-1/test').get_formated_data(0)
+data_folder_name='/tmp/dataset-p2-s10000-min100-max1000'
+x, y, word_to_ind, ind_to_word, labels=Format(data_folder_name+'/training').get_formated_data(0)
+x_test, y_test, word_to_ind_test, ind_to_word_test, labels_test=Format(data_folder_name+'/test').get_formated_data(0)
+"""
 dist={i: [] for i in range(len(labels))}
 max_len=4000
 for i, y_i in enumerate(y):
@@ -51,39 +58,67 @@ for y_i in dist:
 
 x=new_x
 y=new_y
+"""
 
 #x, y, word_to_ind, ind_to_word, labels=Format('data/formated').get_formated_data(0)
+
+"""
+y_new=np.zeros((len(y), len(labels)))
+
+max_len=1000
+new_x=[]
+new_y=[]
+for i, x_i in enumerate(x):
+    print(len(x_i))
+    if len(x_i)>max_len:
+        nl=[x_i[i:i+max_len] for i in range(0, len(x_i), max_len)]
+        new_x+=nl
+        new_y+=[y[i]]*len(nl)
+    else:
+        new_x.append(x_i)
+        new_y.append(y[i])
+
+print(len(new_x))
+print(len(new_y))
+print("max len = "+str(max_len))
+if max_len>2000:
+    1/0
+
+x=new_x
+y=new_y
+"""
 
 y_new=np.zeros((len(y), len(labels)))
 
 for i, y_i in enumerate(y):
     y_new[i, y_i[0]]=1
 
-#print(y_new[0:10])
 y=y_new
+
+#print(y_new[0:10])
+#y=y_new
 x=sequence.pad_sequences(x)
 x=np.array(x)
 print(x.shape)
-1/0
 
-perm=np.random.permutation(x.shape[0])
-x=x[perm]
-y=y[perm]
+#perm=np.random.permutation(x.shape[0])
+#x=x[perm]
+#y=y[perm]
 
-x_test=x[0:TEST_SIZE]
-y_test=y[0:TEST_SIZE]
+#x_test=x[0:TEST_SIZE]
+#y_test=y[0:TEST_SIZE]
 #print(x_test)
 #print(y_test)
-x=x[TEST_SIZE:TEST_SIZE+TRAIN_SIZE]
-y=y[TEST_SIZE:TEST_SIZE+TRAIN_SIZE]
+#x=x[TEST_SIZE:TEST_SIZE+TRAIN_SIZE]
+#y=y[TEST_SIZE:TEST_SIZE+TRAIN_SIZE]
 timesteps=x.shape[1]
-features=300
+features=100
 
 #lmo=load_model('emb_model.h5')
 
 model = Sequential()
 #model.add(Embedding(len(word_to_ind), features, input_length=timesteps, name='emb_layer', trainable=False, weights=lmo.get_layer('emb_layer').get_weights()))
-model.add(Embedding(len(word_to_ind), features, input_length=timesteps, name='emb_layer'))
+model.add(Embedding(len(word_to_ind), features, input_shape=(timesteps,), name='emb_layer'))
 #model.add(Embedding(1000, 64, input_length=10))
 # the model will take as input an integer matrix of size (batch, input_length).
 # the largest integer (i.e. word index) in the input should be no larger than 999 (vocabulary size).
@@ -91,7 +126,7 @@ model.add(Embedding(len(word_to_ind), features, input_length=timesteps, name='em
 
 #model.add(Masking(mask_value=0., input_shape=(timesteps, features)))
 model.add(Flatten())
-model.add(Dense(88, activation='softmax'))
+model.add(Dense(len(labels), activation='softmax'))
 
 #input_array = np.random.randint(1000, size=(32, 10))
 
@@ -100,6 +135,15 @@ model.compile(optimizer=opt, loss='categorical_crossentropy',metrics=['accuracy'
 
 print("time: {}, epochs: {}, learning rate: {}, training size: {}, test size: {}".format(datetime.datetime.utcnow(), NUM_EPOCHS, LEARNING_RATE,TRAIN_SIZE,TEST_SIZE))
 print(model.summary())
+
+"""
+for i in range(3):
+    print("Epoch = {}".format(i))
+    for x_i, y_i in zip(x,y):
+        onehot_encoded = to_categorical(x_i, num_classes=len(word_to_ind))
+        print(x_i, onehot_encoded)
+        model.fit(np.array([onehot_encoded]), [y_i], epochs=1, batch_size=1)
+        """
 
 model.fit(x, y, epochs=NUM_EPOCHS, batch_size=BATCH_SIZE)
 model.save('/tmp/emb_model.h5')

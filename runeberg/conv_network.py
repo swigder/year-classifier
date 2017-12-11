@@ -49,7 +49,7 @@ x=x[TEST_SIZE:TEST_SIZE+TRAIN_SIZE]
 y=y[TEST_SIZE:TEST_SIZE+TRAIN_SIZE]
 #print(x.shape)
 timesteps=x.shape[1]
-features=300
+features=100
 
 lmo=load_model('emb_model.h5')
 
