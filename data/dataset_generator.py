@@ -56,7 +56,7 @@ parser.add_argument('-smax', '--sample_max', type=int, default=2000, help='max c
 args = parser.parse_args()
 
 
-dataset_dir = "{}/dataset-{}-{}-{}-{}".format(args.dir, args.period, args.samples, args.sample_min, args.sample_max)
+dataset_dir = "{}/../datasets/dataset-p{}-s{}-min{}-max{}".format(args.dir, args.period, args.samples, args.sample_min, args.sample_max)
 training_dir = "{}/training".format(dataset_dir)
 test_dir = "{}/test".format(dataset_dir)
 os.makedirs(training_dir, exist_ok=True)
