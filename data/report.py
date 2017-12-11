@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import os
 from collections import defaultdict
 
-parser = argparse.ArgumentParser(description='Clean up.')
+parser = argparse.ArgumentParser(description='Corpora report.')
 parser.add_argument('dir', type=str, help='directory with data files')
 parser.add_argument('out', type=str, help='directory for report')
 
@@ -28,6 +28,7 @@ corpora_nice_names = {'aftonbladet': 'Aftonbladet',
                       'runebergdiverse': 'Runeberg diverse tidningar',
                       'ubkvtdagny': 'Dagny',
                       'ubkvtidun': 'Idun',
+                      'ubkvthertha': 'Hertha',
                       'webbnyheter': 'Webbnyheter',
                       }
 
@@ -46,6 +47,8 @@ for filename in os.listdir(args.dir):
     if decade not in corpora[corp]:
         corpora[corp][decade] = 0
     corpora[corp][decade] += sum(1 for line in open(os.path.join(args.dir, filename)))
+
+print(len(corpora))
 
 table = pd.DataFrame(columns=sorted(decades))
 

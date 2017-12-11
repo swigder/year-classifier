@@ -10,7 +10,7 @@ from model import Model
 MAX_SAMPLES_PER_PERIOD = 5000
 PERIOD_LENGTH = 20
 MIN_SAMPLE_SIZE = None
-DEFAULT_MODEL_TYPE = Model.SGD_CLASSIFER
+DEFAULT_MODEL_TYPE = Model.MLP_CLASSIFER
 
 
 parser = argparse.ArgumentParser(description='Build a model.')
