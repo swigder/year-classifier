@@ -29,8 +29,8 @@ def read_dir_into_dict(data_dir, max_samples_per_period=None, min_sample_size=No
             continue
         with codecs.open(data_dir + filename, 'r', 'utf-8') as file:
             year = int(file.readline())
-            if year < 1780:
-                continue
+            # if year < 1780:
+            #     continue
             lines = []
             current_line = ""
             for line in file.readlines():
@@ -50,40 +50,5 @@ def read_data(data_dir, max_samples_per_period, period_length, min_sample_size=N
     args = {'max_samples_per_period': max_samples_per_period, 'min_sample_size': min_sample_size}
     train = read_dir_into_dict(data_dir + '/training/', **args)
     test = read_dir_into_dict(data_dir + '/test/', **args)
-
-    return Data(train=data_set(train), test=data_set(test))
-
-
-def read_data_old(data_dir, max_samples_per_period, period_length, min_sample_size=None):
-    train = defaultdict(list)
-    test = defaultdict(list)
-
-    for filename in os.listdir(data_dir):
-        if not filename.endswith('.txt'):
-            continue
-        with codecs.open(data_dir + filename, 'r', 'utf-8') as file:
-            year = int(file.readline())
-            if year < 1780:
-                continue
-            year = year // period_length * period_length
-            if min_sample_size is None:
-                lines = list(file.readlines())
-            else:
-                lines = []
-                current_line = ""
-                for line in file.readlines():
-                    if len(current_line) < min_sample_size and len(line) < min_sample_size:
-                        current_line += line
-                    else:
-                        lines.append(current_line)
-                        current_line = line
-                lines.append(current_line)
-            split = int(len(lines) * .75)
-            train[year] += lines[:split]
-            test[year] += lines[split:]
-            if len(train[year]) > max_samples_per_period:
-                train[year] = train[year][:max_samples_per_period]
-            if len(test[year]) > max_samples_per_period:
-                test[year] = test[year][:max_samples_per_period]
 
     return Data(train=data_set(train), test=data_set(test))

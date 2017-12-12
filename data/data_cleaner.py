@@ -44,7 +44,7 @@ def process_file(dir, filename, old_data_dir, clean_fn):
             is_dirty_line, clean_lines = clean_fn(line)
             output_lines += clean_lines
             will_clean |= is_dirty_line
-        print('Input line count: {}, output line count: {}'.format(input_line_count, len(output_lines)))
+        print('- Input line count: {}, output line count: {}'.format(input_line_count, len(output_lines)))
     if will_clean:
         print('- Rewriting file file {}!'.format(filename))
         os.rename(path, old_data_dir + filename)
