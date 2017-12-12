@@ -23,9 +23,9 @@ corpora_nice_names = {'aftonbladet': 'Aftonbladet',
                       'gp': 'Göteborgsposten',
                       'kalmar': 'Kalmar',
                       'ordat': 'Ordat',
-                      'postochinrikestidning': 'Post- och inrikes tidning,',
+                      'postochinrikestidning': 'Post- och inrikes tidning',
                       'press': 'Press',
-                      'runebergdiverse': 'Runeberg diverse tidningar',
+                      'runebergdiverse': 'Runeberg diverse',
                       'ubkvtdagny': 'Dagny',
                       'ubkvtidun': 'Idun',
                       'ubkvthertha': 'Hertha',
@@ -49,20 +49,20 @@ for filename in os.listdir(args.dir):
     corpora[corp][decade] += sum(1 for line in open(os.path.join(args.dir, filename)))
 
 print(len(corpora))
+print()
 
 table = pd.DataFrame(columns=sorted(decades))
 
-for corpus, hits in corpora.items():
+for corpus, hits in sorted(corpora.items()):
     for decade, count in hits.items():
         table.at[corpus, decade] = count
-table.loc['Total'] = table.sum(axis=0)
+table.loc['- Total'] = table.sum(axis=0).astype(int)
 
-pd.options.display.float_format = '{:,.0f}'.format
 
-print(table[list(range(1770, 1830, 10))].dropna(how='all').to_csv(float_format='%.0g'))
-print(table[list(range(1830, 1890, 10))].dropna(how='all').to_csv(float_format='%.0g'))
-print(table[list(range(1890, 1950, 10))].dropna(how='all').to_csv(float_format='%.0g'))
-print(table[list(range(1950, 2020, 10))].dropna(how='all').to_csv(float_format='%.0g'))
+print(table[list(range(1770, 1830, 10))].dropna(how='all').to_csv())
+print(table[list(range(1830, 1890, 10))].dropna(how='all').to_csv())
+print(table[list(range(1890, 1950, 10))].dropna(how='all').to_csv())
+print(table[list(range(1950, 2020, 10))].dropna(how='all').to_csv())
 
 # table.to_csv(os.path.join(args.out, 'report.csv'))
 

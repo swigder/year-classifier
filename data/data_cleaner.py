@@ -20,6 +20,12 @@ def clean_too_long(line):
     return len(output_lines) > 1, output_lines
 
 
+def clean_too_short(line):
+    if len(line) >= 100:
+        return False, [line]
+    return True, []
+
+
 def clean_junk(line):
     alpha = sum([1 for char in line if char.isalpha()])
     if alpha > len(line) / 2:
@@ -40,13 +46,13 @@ def process_file(dir, filename, old_data_dir, clean_fn):
             will_clean |= is_dirty_line
         print('Input line count: {}, output line count: {}'.format(input_line_count, len(output_lines)))
     if will_clean:
-        print('Need to rewrite file {}!'.format(filename))
+        print('- Rewriting file file {}!'.format(filename))
         os.rename(path, old_data_dir + filename)
         with codecs.open(path, 'w', 'utf-8') as file:
             file.writelines(output_lines)
 
 
-fns = {'junk': clean_junk, 'long': clean_too_long}
+fns = {'junk': clean_junk, 'long': clean_too_long, 'short': clean_too_short}
 
 
 parser = argparse.ArgumentParser(description='Clean up.')
