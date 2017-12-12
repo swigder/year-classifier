@@ -20,7 +20,8 @@ LEARNING_RATE=0.0005
 BATCH_SIZE=32
 
 # Load data
-x, y, word_to_ind, ind_to_word, labels=Format().get_formated_data(1)
+x, y, word_to_ind, ind_to_word, labels=Format('/tmp/dataset-2-10000/training').get_formated_data(0)
+x_test, y_test, word_to_ind_test, ind_to_word_test, labels_test=Format('/tmp/dataset-2-10000/test').get_formated_data(0)
 
 y_new=np.zeros((len(y), len(labels)))
 
@@ -54,7 +55,7 @@ model.add(Embedding(len(word_to_ind)+1, features, mask_zero=True))
 # now model.output_shape == (None, 10, 64), where None is the batch dimension.
 
 model.add(Masking(mask_value=0., input_shape=(timesteps, features)))
-model.add(Bidirectional(LSTM(50, activation='softmax')))
+model.add(Bidirectional(LSTM(50, activation='relu')))
 model.add(BatchNormalization())
 model.add(Dense(14, activation='softmax'))
 

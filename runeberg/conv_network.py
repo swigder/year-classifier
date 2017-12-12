@@ -3,7 +3,9 @@ from keras.optimizers import Adam
 from keras.preprocessing import sequence
 from keras.models import Sequential
 from keras import regularizers
-from keras.layers import Embedding, Dense, Activation, LSTM, BatchNormalization, Bidirectional, Conv1D, Flatten, MaxPooling1D, AveragePooling1D, Dropout
+from keras.layers import Embedding, Dense, Activation, LSTM, BatchNormalization, Bidirectional, Conv1D, Flatten, MaxPooling1D, AveragePooling1D, Dropout, Input
+from keras.models import load_model, Model
+
 import numpy as np
 import os
 from sklearn.metrics import confusion_matrix
@@ -22,7 +24,8 @@ TEST_SIZE=2000
 
 
 # Load data
-x, y, word_to_ind, ind_to_word, labels=Format().get_formated_data(0)
+#x, y, word_to_ind, ind_to_word, labels=Format('/tmp/formated_data_small').get_formated_data(0)
+x, y, word_to_ind, ind_to_word, labels=Format('data/formated').get_formated_data(0)
 
 y_new=np.zeros((len(y), len(labels)))
 
@@ -46,24 +49,29 @@ x=x[TEST_SIZE:TEST_SIZE+TRAIN_SIZE]
 y=y[TEST_SIZE:TEST_SIZE+TRAIN_SIZE]
 #print(x.shape)
 timesteps=x.shape[1]
-features=300
+features=100
 
-model = Sequential()
-model.add(Embedding(len(word_to_ind), features, input_length=timesteps))
-#model.add(Embedding(1000, 64, input_length=10))
+lmo=load_model('emb_model.h5')
+
+#model = Sequential()
+inputs=Input(shape=(timesteps, features))
+#model.add(Embedding(len(word_to_ind), features, input_length=timesteps))
+model.add(Embedding(len(word_to_ind), features, input_length=timesteps, name='emb_layer', trainable=False, weights=lmo.get_layer('emb_layer').get_weights()))
+
 # the model will take as input an integer matrix of size (batch, input_length).
 # the largest integer (i.e. word index) in the input should be no larger than 999 (vocabulary size).
 # now model.output_shape == (None, 10, 64), where None is the batch dimension.
 
 #model.add(Masking(mask_value=0., input_shape=(timesteps, features)))
-model.add(Conv1D(64, 3, activation='softmax',kernel_regularizer=regularizers.l2(0.01)))
+model.add(Conv1D(128, 3, activation='relu',kernel_regularizer=regularizers.l2(0.01)))
 model.add(AveragePooling1D())
-model.add(Conv1D(32, 3, activation='softmax',kernel_regularizer=regularizers.l2(0.01)))
-model.add(AveragePooling1D())
-model.add(Conv1D(16, 3, activation='softmax',kernel_regularizer=regularizers.l2(0.01)))
-model.add(AveragePooling1D())
-model.add(Conv1D(8, 3, activation='softmax',kernel_regularizer=regularizers.l2(0.01)))
-model.add(AveragePooling1D())
+#model.add(Conv1D(64, 3, activation='relu',kernel_regularizer=regularizers.l2(0.01)))
+#model.add(MaxPooling1D())
+#model.add(AveragePooling1D())
+#model.add(Conv1D(16, 3, activation='relu',kernel_regularizer=regularizers.l2(0.01)))
+#model.add(AveragePooling1D())
+#model.add(Conv1D(8, 3, activation='relu',kernel_regularizer=regularizers.l2(0.01)))
+#model.add(AveragePooling1D())
 model.add(Flatten())
 model.add(BatchNormalization())
 model.add(Dropout(0.5))
@@ -80,8 +88,8 @@ print(model.summary())
 model.fit(x, y, epochs=NUM_EPOCHS, batch_size=BATCH_SIZE, validation_split=0.2)
 
 out=model.predict(x_test)
-print(out[0:100])
-print(y_test[0:100])
+#print(out[0:100])
+#print(y_test[0:100])
 score,acc=model.evaluate(x_test,  y_test, batch_size=32)
 print(score, acc)
 lab=np.argmax(y_test, axis=1)
