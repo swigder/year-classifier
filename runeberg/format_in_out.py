@@ -39,13 +39,13 @@ class Format:
         x=[]
         y=[]
 
-        count_vec=CountVectorizer(max_df=.95, min_df=30, token_pattern=r"(?u)\b[A-ZÅÄÖa-zåäö][A-ZÅÄÖa-zåäö]+\b")
+        count_vec=CountVectorizer(max_df=.95, min_df=0.0001, token_pattern=r"(?u)\b[A-ZÅÄÖa-zåäö][A-ZÅÄÖa-zåäö]+\b")
         count_vec.fit(sentences)
         vocab=count_vec.vocabulary_
         tokenizer=count_vec.build_tokenizer()
         for d in data:
             # Split all sentences into lists of words, if-statement is to remove empty strings
-            split_sentences=[[w for w in tokenizer(s) if w in vocab] for s in d[1].split('\n')]
+            split_sentences=[list(filter(lambda x: len(x)>0, [w for w in tokenizer(s) if w in vocab and w!='' and w!=' '])) for s in d[1].split('\n')]
             #print(year, len(sentences))
             x=x+split_sentences
             y=y+[[d[0]] for i in range(len(split_sentences))]

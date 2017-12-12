@@ -52,7 +52,9 @@ def to_onehot(z):
 
 #print(y_new[0:10])
 y=to_onehot(y)
+print(y_test[0:10])
 y_test=to_onehot(y_test)
+print(y_test[0:10])
 
 x_tot=x+x_test
 x_tot=sequence.pad_sequences(x_tot)
@@ -60,8 +62,9 @@ x_tot=np.array(x_tot)
 
 x=x_tot[0:len(x)]
 
+print(x_test[0:3])
 x_test=x_tot[len(x):]
-x_test=np.array(x_test)
+print(x_test[0:3])
 
 perm=np.random.permutation(x.shape[0])
 x=x[perm]
@@ -93,37 +96,16 @@ layer=Embedding(len(word_to_ind), features, input_length=timesteps, name='emb_la
 # now model.output_shape == (None, 10, 64), where None is the batch dimension.
 
 #model.add(Masking(mask_value=0., input_shape=(timesteps, features)))
-layer1=Conv1D(32, 3, padding='same', activation='relu')(layer)
-layer1=Conv1D(32, 1, padding='same', activation='relu')(layer1)
-layer1=Conv1D(32, 3, padding='same', activation='relu')(layer1)
-layer1=MaxPooling1D()(layer1)
+conv1=Conv1D(128, 3, padding='same', activation='relu')(layer)
+conv2=Conv1D(128, 5, padding='same', activation='relu')(layer)
+conv3=Conv1D(128, 7, padding='same', activation='relu')(layer)
+conv4=MaxPooling1D(pool_size=3, strides=1, padding='same')(layer)
 
-layer2=Conv1D(64, 3, padding='same', activation='relu')(layer)
-#layer2=Conv1D(16, 3, padding='same', activation='relu')(layer)
-#layer2=Conv1D(8, 3, padding='same', activation='relu')(layer2)
-layer2=MaxPooling1D()(layer2)
-"""
-#layer2=AveragePooling1D()(layer2)
-layer2=Conv1D(128, 1, activation='relu')(layer2)
-layer2=MaxPooling1D()(layer2)
-#layer2=AveragePooling1D()(layer2)
-layer2=Conv1D(128, 3, activation='relu')(layer2)
-layer2=MaxPooling1D()(layer2)
-"""
-
-layer=layer2
-#layer=Concatenate()([layer1, layer2])
-#model.add(Conv1D(64, 3, activation='relu',kernel_regularizer=regularizers.l2(0.01)))
-#model.add(MaxPooling1D())
-#model.add(AveragePooling1D())
-#model.add(Conv1D(16, 3, activation='relu',kernel_regularizer=regularizers.l2(0.01)))
-#model.add(AveragePooling1D())
-#model.add(Conv1D(8, 3, activation='relu',kernel_regularizer=regularizers.l2(0.01)))
-#model.add(AveragePooling1D())
+layer=Concatenate()([conv1, conv2, conv3, conv4])
 layer=Flatten()(layer)
 #layer=BatchNormalization()(layer)
 #layer=Dropout(0.5)(layer)
-predictions=Dense(len(labels), activation='softmax',kernel_regularizer=regularizers.l2(0.01))(layer)
+predictions=Dense(len(labels), activation='softmax')(layer)
 model=Model(inputs=inputs, outputs=predictions)
 #input_array = np.random.randint(1000, size=(32, 10))
 

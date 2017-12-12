@@ -9,6 +9,7 @@ from keras.callbacks import TensorBoard
 
 import numpy as np
 import os
+import sys
 from sklearn.metrics import confusion_matrix
 from sklearn import metrics
 import datetime
@@ -20,10 +21,10 @@ np.set_printoptions(threshold=np.nan)
 
 from format_in_out import Format
 
-NUM_EPOCHS=10
+NUM_EPOCHS=6
 BATCH_SIZE=64
-LEARNING_RATE=0.001
-TRAIN_SIZE=10000
+LEARNING_RATE=0.0001
+TRAIN_SIZE=4000
 VAL_SIZE=8000
 TEST_SIZE=8000
 
@@ -31,9 +32,14 @@ TEST_SIZE=8000
 # Load data
 #x, y, word_to_ind, ind_to_word, labels=Format('/tmp/dataset-1/training').get_formated_data(0)
 #x_test, y_test, word_to_ind_test, ind_to_word_test, labels_test=Format('/tmp/dataset-1/test').get_formated_data(0)
-data_folder_name='/tmp/dataset-p2-s10000-min100-max1000'
+data_folder_name='/tmp/dataset-p2-s30000-min100-max2000' #'/tmp/dataset-p2-s10000-min100-max1000'
 x, y, word_to_ind, ind_to_word, labels=Format(data_folder_name+'/training').get_formated_data(0)
 x_test, y_test, word_to_ind_test, ind_to_word_test, labels_test=Format(data_folder_name+'/test').get_formated_data(0)
+
+# Remove all words not in training set
+x_test=[[w for w in s if w in ind_to_word] for s in x_test]
+
+
 TEST_SIZE=len(x_test)
 print("vocab = {}".format(len(word_to_ind)))
 
@@ -67,65 +73,36 @@ perm=np.random.permutation(x.shape[0])
 x=x[perm]
 y=y[perm]
 
+"""
+x_test=x_test[0:TEST_SIZE]
+y_test=y_test[0:TEST_SIZE]
+x=x[TEST_SIZE:TEST_SIZE+TRAIN_SIZE]
+y=y[TEST_SIZE:TEST_SIZE+TRAIN_SIZE]
+"""
+
 perm=np.random.permutation(x_test.shape[0])
-x_test=x_test[perm]
-y_test=y_test[perm]
+#x_test=x_test[perm]
+#y_test=y_test[perm]
 #x=x[0:5000]
 #y=y[0:5000]
 
 print(x.shape)
 timesteps=x.shape[1]
-features=100
+features=50
 
 try:
     lmo=load_model('/tmp/emb_model.h5')
 except:
     print('embedding model not found')
 
-#model = Sequential()
-inputs=Input(shape=(timesteps, ))
-#model.add(Embedding(len(word_to_ind), features, input_length=timesteps))
-layer=Embedding(len(word_to_ind), features, input_length=timesteps, name='emb_layer')(inputs)
-#layer=Embedding(len(word_to_ind), features, input_length=timesteps, name='emb_layer', trainable=False, weights=lmo.get_layer('emb_layer').get_weights())(inputs)
 
-# the model will take as input an integer matrix of size (batch, input_length).
-# the largest integer (i.e. word index) in the input should be no larger than 999 (vocabulary size).
-# now model.output_shape == (None, 10, 64), where None is the batch dimension.
+model_name=sys.argv[1]
+from conv_one_layer_model import ConvModel
+from multi_conv_model import MultiConvModel
+from lstm_model import LstmModel
+models={'1conv':, 'multiconv':, 'lstm':}
 
-#model.add(Masking(mask_value=0., input_shape=(timesteps, features)))
-layer1=Conv1D(32, 3, padding='same', activation='relu')(layer)
-layer1=Conv1D(32, 1, padding='same', activation='relu')(layer1)
-layer1=Conv1D(32, 3, padding='same', activation='relu')(layer1)
-layer1=MaxPooling1D()(layer1)
-
-layer2=Conv1D(64, 3, padding='same', activation='relu')(layer)
-#layer2=Conv1D(16, 3, padding='same', activation='relu')(layer)
-#layer2=Conv1D(8, 3, padding='same', activation='relu')(layer2)
-layer2=MaxPooling1D()(layer2)
-"""
-#layer2=AveragePooling1D()(layer2)
-layer2=Conv1D(128, 1, activation='relu')(layer2)
-layer2=MaxPooling1D()(layer2)
-#layer2=AveragePooling1D()(layer2)
-layer2=Conv1D(128, 3, activation='relu')(layer2)
-layer2=MaxPooling1D()(layer2)
-"""
-
-layer=layer2
-#layer=Concatenate()([layer1, layer2])
-#model.add(Conv1D(64, 3, activation='relu',kernel_regularizer=regularizers.l2(0.01)))
-#model.add(MaxPooling1D())
-#model.add(AveragePooling1D())
-#model.add(Conv1D(16, 3, activation='relu',kernel_regularizer=regularizers.l2(0.01)))
-#model.add(AveragePooling1D())
-#model.add(Conv1D(8, 3, activation='relu',kernel_regularizer=regularizers.l2(0.01)))
-#model.add(AveragePooling1D())
-layer=Flatten()(layer)
-#layer=BatchNormalization()(layer)
-#layer=Dropout(0.5)(layer)
-predictions=Dense(len(labels), activation='softmax',kernel_regularizer=regularizers.l2(0.01))(layer)
-model=Model(inputs=inputs, outputs=predictions)
-#input_array = np.random.randint(1000, size=(32, 10))
+model=models[model_name].get()
 
 opt=Adam(lr=LEARNING_RATE, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
 model.compile(optimizer=opt, loss='categorical_crossentropy',metrics=['accuracy'])
@@ -150,4 +127,5 @@ print(pred_lab[0:100])
 conf_matrix=confusion_matrix(lab, pred_lab)
 print(conf_matrix)
 print(metrics.classification_report(lab, pred_lab))
+
 

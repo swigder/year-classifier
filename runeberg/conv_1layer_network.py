@@ -20,10 +20,10 @@ np.set_printoptions(threshold=np.nan)
 
 from format_in_out import Format
 
-NUM_EPOCHS=10
+NUM_EPOCHS=6
 BATCH_SIZE=64
-LEARNING_RATE=0.001
-TRAIN_SIZE=10000
+LEARNING_RATE=0.0001
+TRAIN_SIZE=4000
 VAL_SIZE=8000
 TEST_SIZE=8000
 
@@ -31,9 +31,14 @@ TEST_SIZE=8000
 # Load data
 #x, y, word_to_ind, ind_to_word, labels=Format('/tmp/dataset-1/training').get_formated_data(0)
 #x_test, y_test, word_to_ind_test, ind_to_word_test, labels_test=Format('/tmp/dataset-1/test').get_formated_data(0)
-data_folder_name='/tmp/dataset-p2-s10000-min100-max1000'
+data_folder_name='/tmp/dataset-p2-s30000-min100-max2000' #'/tmp/dataset-p2-s10000-min100-max1000'
 x, y, word_to_ind, ind_to_word, labels=Format(data_folder_name+'/training').get_formated_data(0)
 x_test, y_test, word_to_ind_test, ind_to_word_test, labels_test=Format(data_folder_name+'/test').get_formated_data(0)
+
+# Remove all words not in training set
+x_test=[[w for w in s if w in ind_to_word] for s in x_test]
+
+
 TEST_SIZE=len(x_test)
 print("vocab = {}".format(len(word_to_ind)))
 
@@ -67,15 +72,22 @@ perm=np.random.permutation(x.shape[0])
 x=x[perm]
 y=y[perm]
 
+"""
+x_test=x_test[0:TEST_SIZE]
+y_test=y_test[0:TEST_SIZE]
+x=x[TEST_SIZE:TEST_SIZE+TRAIN_SIZE]
+y=y[TEST_SIZE:TEST_SIZE+TRAIN_SIZE]
+"""
+
 perm=np.random.permutation(x_test.shape[0])
-x_test=x_test[perm]
-y_test=y_test[perm]
+#x_test=x_test[perm]
+#y_test=y_test[perm]
 #x=x[0:5000]
 #y=y[0:5000]
 
 print(x.shape)
 timesteps=x.shape[1]
-features=100
+features=50
 
 try:
     lmo=load_model('/tmp/emb_model.h5')
@@ -93,35 +105,9 @@ layer=Embedding(len(word_to_ind), features, input_length=timesteps, name='emb_la
 # now model.output_shape == (None, 10, 64), where None is the batch dimension.
 
 #model.add(Masking(mask_value=0., input_shape=(timesteps, features)))
-layer1=Conv1D(32, 3, padding='same', activation='relu')(layer)
-layer1=Conv1D(32, 1, padding='same', activation='relu')(layer1)
-layer1=Conv1D(32, 3, padding='same', activation='relu')(layer1)
-layer1=MaxPooling1D()(layer1)
-
-layer2=Conv1D(64, 3, padding='same', activation='relu')(layer)
-#layer2=Conv1D(16, 3, padding='same', activation='relu')(layer)
-#layer2=Conv1D(8, 3, padding='same', activation='relu')(layer2)
-layer2=MaxPooling1D()(layer2)
-"""
-#layer2=AveragePooling1D()(layer2)
-layer2=Conv1D(128, 1, activation='relu')(layer2)
-layer2=MaxPooling1D()(layer2)
-#layer2=AveragePooling1D()(layer2)
-layer2=Conv1D(128, 3, activation='relu')(layer2)
-layer2=MaxPooling1D()(layer2)
-"""
-
-layer=layer2
-#layer=Concatenate()([layer1, layer2])
-#model.add(Conv1D(64, 3, activation='relu',kernel_regularizer=regularizers.l2(0.01)))
-#model.add(MaxPooling1D())
-#model.add(AveragePooling1D())
-#model.add(Conv1D(16, 3, activation='relu',kernel_regularizer=regularizers.l2(0.01)))
-#model.add(AveragePooling1D())
-#model.add(Conv1D(8, 3, activation='relu',kernel_regularizer=regularizers.l2(0.01)))
-#model.add(AveragePooling1D())
+layer1=Conv1D(128, 5, padding='same', activation='relu')(layer)
+layer=MaxPooling1D()(layer1)
 layer=Flatten()(layer)
-#layer=BatchNormalization()(layer)
 #layer=Dropout(0.5)(layer)
 predictions=Dense(len(labels), activation='softmax',kernel_regularizer=regularizers.l2(0.01))(layer)
 model=Model(inputs=inputs, outputs=predictions)
