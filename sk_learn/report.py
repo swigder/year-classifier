@@ -19,7 +19,7 @@ def generate_min_sample_size_report(data_dir):
         print('Getting vocabulary size for sample size {}'.format(min_sample))
         data = inputs[min_sample]
         cv = CountVectorizer(max_df=.95, min_df=.0001, token_pattern=r"(?u)\b[A-ZÅÄÖa-zåäö][A-ZÅÄÖa-zåäö]+\b")
-        cv.fit_transform(data.train.inputs, data.train.targets)
+        cv.fit(data.train.inputs, data.train.targets)
         non_empty_train = 0
         for sample in data.train.inputs:
             if any(token in cv.vocabulary_ for token in cv.build_tokenizer()(sample)):
@@ -51,16 +51,35 @@ def generate_min_sample_size_report(data_dir):
 def generate_bayes_report(data_dir):
     data = read_data(data_dir, None, 500, reusable_input=True)
     results = dict()
-    for alpha in [None, .25, .5, .75, 1.0]:
-        model = Model(model_type=Model.NAIVE_BAYES, verbose=False, options={'alpha': alpha})
+    for alpha in [0, .1, .25, .5, 1.0]:
+        model = Model(model_type=Model.NAIVE_BAYES, verbose=False, model_options={'alpha': alpha})
         model.train(data.train)
         accuracy = model.test(data.test)
         results[alpha] = accuracy
     print(results)
 
 
+def generate_tf_idf_report(data_dir):
+    data = read_data(data_dir, None, 500, reusable_input=True)
+    results = dict()
+    for min_df in [.01, .001, .0001, .00001]:
+        cv = CountVectorizer(min_df=min_df, token_pattern=r"(?u)\b[A-ZÅÄÖa-zåäö][A-ZÅÄÖa-zåäö]+\b")
+        cv.fit(data.train.inputs, data.train.targets)
+
+        model = Model(model_type=Model.NAIVE_BAYES, verbose=False,
+                      vocab_options={'min_df': min_df})
+        model.train(data.train)
+        accuracy = model.test(data.test)
+        print(min_df, accuracy, len(cv.vocabulary_))
+        results[min_df] = (accuracy, len(cv.vocabulary_))
+    print(results)
+
+
 def generate_report(data_dir, type):
+    # todo validation set
     if type == 'min':
         generate_min_sample_size_report(data_dir)
     elif type == 'bayes':
         generate_bayes_report(data_dir)
+    elif type == 'df':
+        generate_tf_idf_report(data_dir)

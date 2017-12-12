@@ -16,20 +16,20 @@ class Model:
     NAIVE_BAYES = 'bayes'
     MODEL_OPTIONS = [SGD_CLASSIFER, MLP_CLASSIFER, SGD_REGRESSOR, MLP_REGRESSOR, NAIVE_BAYES]
 
-    def __init__(self, model_type, verbose=True, options={}):
+    def __init__(self, model_type, verbose=True, vocab_options={}, model_options={}):
         self.model_type = model_type
         self.verbose = verbose
 
-        self.text_clf = self.get_pipeline(options=options)
+        self.text_clf = self.get_pipeline(**vocab_options, model_options=model_options)
 
-    def get_pipeline(self, max_df=.95, min_df=.0001, use_tf_idf=True, binary=False, options={}):
+    def get_pipeline(self, max_df=.95, min_df=.0001, use_tf_idf=True, binary=False, model_options={}):
         steps = list()
 
         steps.append(('vect', CountVectorizer(max_df=max_df, min_df=min_df, binary=binary,
                                               token_pattern=r"(?u)\b[A-ZÅÄÖa-zåäö][A-ZÅÄÖa-zåäö]+\b")))
         if use_tf_idf:
             steps.append(('tfidf', TfidfTransformer()))
-        steps.append(('clf', self.get_model(self.model_type, **options)))
+        steps.append(('clf', self.get_model(self.model_type, **model_options)))
 
         if self.verbose:
             for name, step in steps:
