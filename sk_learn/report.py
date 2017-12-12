@@ -46,3 +46,21 @@ def generate_min_sample_size_report(data_dir):
             accuracy_results.loc[len(accuracy_results)] = [model_type, min_sample, accuracy]
             print('Got accuracy {}'.format(accuracy))
     print(accuracy_results.sort_values(['Model', 'Min Sample']))
+
+
+def generate_bayes_report(data_dir):
+    data = read_data(data_dir, None, 500, reusable_input=True)
+    results = dict()
+    for alpha in [None, .25, .5, .75, 1.0]:
+        model = Model(model_type=Model.NAIVE_BAYES, verbose=False, options={'alpha': alpha})
+        model.train(data.train)
+        accuracy = model.test(data.test)
+        results[alpha] = accuracy
+    print(results)
+
+
+def generate_report(data_dir, type):
+    if type == 'min':
+        generate_min_sample_size_report(data_dir)
+    elif type == 'bayes':
+        generate_bayes_report(data_dir)

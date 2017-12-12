@@ -20,16 +20,16 @@ class Model:
         self.model_type = model_type
         self.verbose = verbose
 
-        self.text_clf = self.get_pipeline(**options)
+        self.text_clf = self.get_pipeline(options=options)
 
-    def get_pipeline(self, max_df=.95, min_df=.0001, use_tf_idf=True, binary=False):
+    def get_pipeline(self, max_df=.95, min_df=.0001, use_tf_idf=True, binary=False, options={}):
         steps = list()
 
         steps.append(('vect', CountVectorizer(max_df=max_df, min_df=min_df, binary=binary,
                                               token_pattern=r"(?u)\b[A-ZÅÄÖa-zåäö][A-ZÅÄÖa-zåäö]+\b")))
         if use_tf_idf:
             steps.append(('tfidf', TfidfTransformer()))
-        steps.append(('clf', self.get_model(self.model_type)))
+        steps.append(('clf', self.get_model(self.model_type, **options)))
 
         if self.verbose:
             for name, step in steps:
@@ -37,7 +37,7 @@ class Model:
 
         return Pipeline(steps)
 
-    def get_model(self, model_type, hidden_nodes=100):
+    def get_model(self, model_type, hidden_nodes=100, alpha=1.0):
         if model_type == self.SGD_CLASSIFER:
             return SGDClassifier(loss='log', penalty='l2',
                                  alpha=1e-4, random_state=42,
@@ -56,7 +56,7 @@ class Model:
         elif model_type == self.MLP_REGRESSOR:
             return MLPRegressor(verbose=self.verbose, learning_rate_init=1e-1, learning_rate='adaptive')
         elif model_type == self.NAIVE_BAYES:
-            return MultinomialNB(fit_prior=False)
+            return MultinomialNB(fit_prior=False, alpha=alpha)
 
     def train(self, training):
         self.text_clf.fit(training.inputs, training.targets)
