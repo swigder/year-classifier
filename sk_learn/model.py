@@ -37,14 +37,14 @@ class Model:
 
         return Pipeline(steps)
 
-    def get_model(self, model_type, hidden_nodes=100, alpha=1.0):
+    def get_model(self, model_type, hidden_nodes=50, alpha=.1, regularization=1e-5):
         if model_type == self.SGD_CLASSIFER:
             return SGDClassifier(loss='log', penalty='l2',
-                                 alpha=1e-4, random_state=42,
+                                 alpha=regularization, random_state=42,
                                  max_iter=30, tol=None, class_weight='balanced',
                                  verbose=3 if self.verbose else 0)
         elif model_type == self.MLP_CLASSIFER:
-            return MLPClassifier(solver='adam', alpha=1e-3, hidden_layer_sizes=(hidden_nodes,),
+            return MLPClassifier(solver='adam', alpha=1e-4, hidden_layer_sizes=(hidden_nodes,),
                                  learning_rate_init=1e-1, learning_rate='adaptive',
                                  validation_fraction=.2,
                                  verbose=self.verbose)
@@ -74,7 +74,7 @@ class Model:
 
         if self.model_type in [self.MLP_REGRESSOR, self.SGD_REGRESSOR]:
             target_options = list(sorted(set(test.targets)))
-            predicted = [target_options[np.argmin([abs(p - t) for t in target_options])] for p in predicted]
+            predicted = [target_options[np.argmin([abs(p - (t + 10)) for t in target_options])] for p in predicted]
 
         df = pd.DataFrame(data={'actual': test.targets, 'predicted': predicted})
         correct_count = df.where(df.actual == df.predicted).count()[0]
@@ -97,7 +97,10 @@ class Model:
 
         print()
 
-        v = list(self.text_clf.named_steps['vect'].vocabulary_.keys())
+        vocab = self.text_clf.named_steps['vect'].vocabulary_
+        terms = np.array(list(vocab.keys()))
+        indices = np.array(list(vocab.values()))
+        v = terms[np.argsort(indices)]
 
         if self.model_type == self.SGD_CLASSIFER:
             for target, coeffs in enumerate(self.text_clf.named_steps['clf'].coef_):
@@ -118,5 +121,21 @@ class Model:
                 top_hidden = np.argmax(layer0[i])
                 hidden_target = np.argmax(layer1[top_hidden])
                 print(v[i], np.var(layer0[i]), classes[hidden_target], self.text_clf.predict([v[i]]))
+        elif self.model_type == self.NAIVE_BAYES:
+            import matplotlib.pyplot as plt
+            import seaborn as sns
 
+            classes = self.text_clf.named_steps['clf'].classes_
+            coeffs = self.text_clf.named_steps['clf'].coef_
+            vocab_var = np.var(coeffs, axis=0)
+            n_words_to_examine = 100
+            ind = np.argpartition(vocab_var, -n_words_to_examine)[-n_words_to_examine:]
+            ind = ind[np.argsort(vocab_var[ind])][::-1]
+            for i in ind:
+                word_coeffs = coeffs[:,i]
+                year, variance = classes[np.argmax(word_coeffs)], np.var(word_coeffs)
+                plt.scatter(year, variance)
+                plt.annotate(v[i], (year, variance))
+                print(v[i], year, variance, coeffs)
+            plt.show()
         print()

@@ -5,7 +5,7 @@ import time
 
 from files_to_data import read_data
 from model import Model
-from report import generate_report
+from report import generate_report, REPORTS
 
 MAX_SAMPLES_PER_PERIOD = 5000
 PERIOD_LENGTH = 20
@@ -22,7 +22,7 @@ parser.add_argument('-s', '--min_sample', type=int, default=MIN_SAMPLE_SIZE,
 parser.add_argument('-t', '--model_type', default=DEFAULT_MODEL_TYPE,
                     choices=Model.MODEL_OPTIONS,
                     help='type of model')
-parser.add_argument('-r', '--report', default=None, choices=['min', 'bayes', 'df'],
+parser.add_argument('-r', '--report', default=None, choices=REPORTS.keys(),
                     help='type of report')
 
 args = parser.parse_args()

@@ -37,7 +37,7 @@ def split_data(data, percent=.9):
     return training, test
 
 
-def read_dir_into_data_set(data_dir, max_samples_per_period=None, min_sample_size=None):
+def read_dir_into_data_set(data_dir, min_sample_size, max_samples_per_period=None):
     data_dict = defaultdict(list)
     for filename in os.listdir(data_dir):
         if not filename.endswith('.txt'):
@@ -61,7 +61,7 @@ def read_dir_into_data_set(data_dir, max_samples_per_period=None, min_sample_siz
     return data_dict
 
 
-def read_data(data_dir, max_samples_per_period=None, min_sample_size=None, reusable_input=False, validation_set=False):
+def read_data(data_dir, max_samples_per_period=None, min_sample_size=1000, reusable_input=False, validation_set=False):
     args = {'max_samples_per_period': max_samples_per_period,
             'min_sample_size': min_sample_size}
 
