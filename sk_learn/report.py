@@ -184,5 +184,6 @@ REPORTS = {
 
 
 def generate_report(data_dir, type):
+    sns.set()
     REPORTS[type](data_dir)
     plt.show()

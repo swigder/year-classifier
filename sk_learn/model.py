@@ -1,5 +1,8 @@
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from matplotlib.colors import ListedColormap
 from sklearn import metrics
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 from sklearn.linear_model import SGDClassifier, SGDRegressor
@@ -122,20 +125,26 @@ class Model:
                 hidden_target = np.argmax(layer1[top_hidden])
                 print(v[i], np.var(layer0[i]), classes[hidden_target], self.text_clf.predict([v[i]]))
         elif self.model_type == self.NAIVE_BAYES:
-            import matplotlib.pyplot as plt
-            import seaborn as sns
-
+            sns.set()
             classes = self.text_clf.named_steps['clf'].classes_
             coeffs = self.text_clf.named_steps['clf'].coef_
             vocab_var = np.var(coeffs, axis=0)
-            n_words_to_examine = 100
+            n_words_to_examine = 50
             ind = np.argpartition(vocab_var, -n_words_to_examine)[-n_words_to_examine:]
             ind = ind[np.argsort(vocab_var[ind])][::-1]
+            results = pd.DataFrame(columns=classes)
             for i in ind:
                 word_coeffs = coeffs[:,i]
                 year, variance = classes[np.argmax(word_coeffs)], np.var(word_coeffs)
                 plt.scatter(year, variance)
                 plt.annotate(v[i], (year, variance))
-                print(v[i], year, variance, coeffs)
+                print(v[i], year, variance, word_coeffs)
+                results.loc[v[i]] = word_coeffs
+            plt.xlim((1750, 2020))
+            plt.xlabel('Year with highest likelihood')
+            plt.ylabel('Variance of log-likelihood')
+            plt.figure()
+            sns.heatmap(results)
+            plt.yticks(rotation=0)
             plt.show()
         print()
