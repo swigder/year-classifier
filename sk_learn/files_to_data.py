@@ -23,7 +23,13 @@ def targets(data):
         return list(itertools.chain.from_iterable([[target] * len(items) for target, items in data.items()]))
 
 
-def read_dir_into_dict(data_dir, max_samples_per_period=None, min_sample_size=None):
+def split_data_set(data_set, training=.9):
+    cutoff = int(len(data_set.inputs) * training)
+    return DataSet(inputs=data_set.inputs[:cutoff], targets=data_set.targets[:cutoff]), \
+           DataSet(inputs=data_set.inputs[cutoff:], targets=data_set.targets[cutoff:])
+
+
+def read_dir_into_data_set(data_dir, reusable=False, max_samples_per_period=None, min_sample_size=None):
     data_dict = defaultdict(list)
     for filename in os.listdir(data_dir):
         if not filename.endswith('.txt'):
@@ -44,12 +50,20 @@ def read_dir_into_dict(data_dir, max_samples_per_period=None, min_sample_size=No
                     current_line = line
             lines.append(current_line)
             data_dict[year] = lines
-    return data_dict
+    return data_set(data_dict, reusable)
 
 
-def read_data(data_dir, max_samples_per_period, min_sample_size=None, reusable_input=False):
-    args = {'max_samples_per_period': max_samples_per_period, 'min_sample_size': min_sample_size}
-    train = read_dir_into_dict(data_dir + '/training/', **args)
-    test = read_dir_into_dict(data_dir + '/test/', **args)
+def read_data(data_dir, max_samples_per_period=None, min_sample_size=None, reusable_input=False, validation_set=False):
+    args = {'max_samples_per_period': max_samples_per_period,
+            'min_sample_size': min_sample_size,
+            'reusable': reusable_input}
 
-    return Data(train=data_set(train, reusable_input), test=data_set(test, reusable_input))
+    if not validation_set:
+        train = read_dir_into_data_set(data_dir + '/training/', **args)
+        test = read_dir_into_data_set(data_dir + '/test/', **args)
+        return Data(train=train, test=test)
+    else:
+        args['reusable'] = True
+        full_data_set = read_dir_into_data_set(data_dir + '/training/', **args)
+        train, test = split_data_set(full_data_set)
+        return Data(train=train, test=test)

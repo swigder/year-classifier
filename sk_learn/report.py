@@ -5,13 +5,17 @@ from model import Model
 from sklearn.feature_extraction.text import CountVectorizer
 
 
+def _read_data(data_dir, args):
+    return read_data(data_dir, **args, reusable_input=True, validation_set=True)
+
+
 def generate_min_sample_size_report(data_dir):
     sample_sizes = [100, 200, 500, 1000, 2000, 3000]
 
     print('Reading data...')
     inputs = dict()
     for min_sample in sample_sizes:
-        inputs[min_sample] = read_data(data_dir, None, min_sample, reusable_input=True)
+        inputs[min_sample] = _read_data(data_dir, {'min_sample_size': min_sample})
 
     print('Analyzing vocabulary...')
     vocab_size = dict()
@@ -49,7 +53,7 @@ def generate_min_sample_size_report(data_dir):
 
 
 def generate_bayes_report(data_dir):
-    data = read_data(data_dir, None, 500, reusable_input=True)
+    data = _read_data(data_dir, {'min_sample_size': 500})
     results = dict()
     for alpha in [0, .1, .25, .5, 1.0]:
         model = Model(model_type=Model.NAIVE_BAYES, verbose=False, model_options={'alpha': alpha})
@@ -60,7 +64,7 @@ def generate_bayes_report(data_dir):
 
 
 def generate_tf_idf_report(data_dir):
-    data = read_data(data_dir, None, 500, reusable_input=True)
+    data = _read_data(data_dir, {'min_sample_size': 500})
     results = dict()
     for min_df in [.01, .001, .0001, .00001]:
         cv = CountVectorizer(min_df=min_df, token_pattern=r"(?u)\b[A-ZÅÄÖa-zåäö][A-ZÅÄÖa-zåäö]+\b")
@@ -76,7 +80,6 @@ def generate_tf_idf_report(data_dir):
 
 
 def generate_report(data_dir, type):
-    # todo validation set
     if type == 'min':
         generate_min_sample_size_report(data_dir)
     elif type == 'bayes':
