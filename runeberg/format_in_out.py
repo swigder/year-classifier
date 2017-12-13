@@ -8,6 +8,7 @@ class Format:
 
     def __init__(self, filename):
         self.filename=filename
+        self.max_sentences=8000
 
     def convert_to_indices(self, z, unique_words):
         new_z=[]
@@ -30,8 +31,9 @@ class Format:
                 year=f.readline()[:-1]
                 text=f.read()
 
-            sentences+=text.split('\n')
-            data.append((year, text))
+            s=text.split('\n')[:self.max_sentences]
+            sentences+=s
+            data.append((year, s))
             labels.add(year)
 
 
@@ -45,7 +47,7 @@ class Format:
         tokenizer=count_vec.build_tokenizer()
         for d in data:
             # Split all sentences into lists of words, if-statement is to remove empty strings
-            split_sentences=[list(filter(lambda x: len(x)>0, [w for w in tokenizer(s) if w in vocab and w!='' and w!=' '])) for s in d[1].split('\n')]
+            split_sentences=[list(filter(lambda x: len(x)>0, [w for w in tokenizer(s) if w in vocab and w!='' and w!=' '])) for s in d[1]]
             #print(year, len(sentences))
             x=x+split_sentences
             y=y+[[d[0]] for i in range(len(split_sentences))]
