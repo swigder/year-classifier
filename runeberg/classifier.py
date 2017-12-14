@@ -21,15 +21,17 @@ np.set_printoptions(threshold=np.nan)
 
 from format_in_out import Format
 
-NUM_EPOCHS=7
+NUM_EPOCHS=15
 BATCH_SIZE=64
-LEARNING_RATE=0.0001
+LEARNING_RATE=0.00003
 TRAIN_SIZE=100000
 VAL_SIZE=8000
 TEST_SIZE=8000
 features=100
 
 model_name=sys.argv[1]
+curr_time=time.strftime("%H%M")
+
 from conv_model import ConvModel
 from multi_conv_model import MultiConvModel
 from lstm_model import LstmModel
@@ -39,10 +41,10 @@ from lstm_model import LstmModel
 #x_test, y_test, word_to_ind_test, ind_to_word_test, labels_test=Format('/tmp/dataset-1/test').get_formated_data(0)
 data_folder_name='/tmp/dataset-p2-s30000-min100-max2000' #'/tmp/dataset-p2-s10000-min100-max1000'
 x, y, word_to_ind, ind_to_word, labels=Format(data_folder_name+'/training').get_formated_data(0)
-x_test, y_test, word_to_ind_test, ind_to_word_test, labels_test=Format(data_folder_name+'/test').get_formated_data(0)
+x_test, y_test, word_to_ind_test, ind_to_word_test, labels_test=Format(data_folder_name+'/test').get_formated_data(0, word_to_ind, labels)
 
-np.savez('/tmp/numpy_train_'+model_name+'.npz',  x=x, y=y, wti=word_to_ind, itw=ind_to_word, labels=labels)
-np.savez('/tmp/numpy_test_'+model_name+'.npz',  x=x_test, y=y_test, wti=word_to_ind_test, itw=ind_to_word_test, labels=labels_test)
+np.savez('/tmp/numpy_train_'+model_name+'_'+curr_time+'.npz',  x=x, y=y, wti=word_to_ind, itw=ind_to_word, labels=labels)
+np.savez('/tmp/numpy_test_'+model_name+'_'+curr_time+'.npz',  x=x_test, y=y_test)
 
 # Remove all words not in training set
 x_test=[[w for w in s if w in ind_to_word] for s in x_test]
@@ -51,7 +53,7 @@ x_test=[[w for w in s if w in ind_to_word] for s in x_test]
 TEST_SIZE=len(x_test)
 print("vocab = {}".format(len(word_to_ind)))
 
-with open('/tmp/embedding_metadata_'+model_name, 'w+t') as f:
+with open('/tmp/embedding_metadata_'+model_name+'_'+curr_time, 'w+t') as f:
     f.write('Word\tIndex\n')
     for i, w in enumerate(word_to_ind.keys()):
         f.write('{}\t{}\n'.format(w, word_to_ind[w]))
@@ -93,15 +95,15 @@ y=y[TEST_SIZE:TEST_SIZE+TRAIN_SIZE]
 perm=np.random.permutation(x_test.shape[0])
 #x_test=x_test[perm]
 #y_test=y_test[perm]
-x=x[0:5000]
-y=y[0:5000]
+#x=x[0:5000]
+#y=y[0:5000]
 
 print(x.shape)
 
-try:
-    lmo=load_model('/tmp/emb_model.h5')
-except:
-    print('embedding model not found')
+#try:
+    #lmo=load_model('/tmp/emb_model.h5')
+#except:
+    #print('embedding model not found')
 
 
 models={'conv':ConvModel, 'multiconv':MultiConvModel, 'lstm':LstmModel}
@@ -115,7 +117,6 @@ model.compile(optimizer=opt, loss='categorical_crossentropy',metrics=['accuracy'
 print("time: {}, epochs: {}, learning rate: {}, training size: {}, test size: {}".format(datetime.datetime.utcnow(), NUM_EPOCHS, LEARNING_RATE,TRAIN_SIZE,TEST_SIZE))
 print(model.summary())
 
-curr_time=time.strftime("%H%M")
 log_directory='/tmp/logs_{}_{}'.format(model_name, curr_time)
 tb=TensorBoard(log_dir=log_directory, embeddings_freq=1, embeddings_metadata={'emb_layer': '/tmp/embedding_metadata'})
 

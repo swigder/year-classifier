@@ -20,7 +20,8 @@ class ConvModel:
         # now model.output_shape == (None, 10, 64), where None is the batch dimension.
 
         #model.add(Masking(mask_value=0., input_shape=(timesteps, features)))
-        layer1=Conv1D(128, 5, padding='same', activation='relu')(layer)
+        layer1=Conv1D(32, 3, padding='same', activation='relu')(layer)
+        #layer1=BatchNormalization()(layer1)
         layer=MaxPooling1D()(layer1)
         layer=Flatten()(layer)
         #layer=Dropout(0.5)(layer)
