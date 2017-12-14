@@ -20,7 +20,7 @@ class ModelVisualizer:
             print(u"{}\n{}".format(self.classes[target], u"\n".join([u"{} {}".format(v[i], coeffs[i]) for i in top])))
 
     def visualize_mlp_classifier(self):
-        # todo warning! this is not fully supported
+        # todo warning! this is not supported
         layer0 = self.coeffs[0]
         layer1 = self.coeffs[1]
         vocab_var = np.var(layer0, axis=1)
@@ -34,22 +34,36 @@ class ModelVisualizer:
 
     def visualize_naive_bayes(self):
         sns.set()
-        vocab_var = np.var(self.coeffs, axis=0)
-        n_words_to_examine = 50
-        ind = np.argpartition(vocab_var, -n_words_to_examine)[-n_words_to_examine:]
-        ind = ind[np.argsort(vocab_var[ind])][::-1]
-        results = pd.DataFrame(columns=self.classes)
-        for i in ind:
-            word_coeffs = self.coeffs[:, i]
-            year, variance = self.classes[np.argmax(word_coeffs)], np.var(word_coeffs)
-            plt.scatter(year, variance)
-            plt.annotate(self.vocabulary[i], (year, variance))
-            print(self.vocabulary[i], year, variance, word_coeffs)
-            results.loc[self.vocabulary[i]] = word_coeffs
-        plt.xlim((1750, 2020))
+
+        # calculate
+        results = pd.DataFrame(columns=self.classes, index=self.vocabulary, data=self.coeffs.T)
+        var = results.var(axis=1)
+        diff_top_two = results.max(axis=1) - results.quantile(11/12, axis=1)
+        top_years = results.loc[diff_top_two.sort_values(ascending=False)._index].idxmax(axis=1)
+
+        # outlier words
+        outliers_values = diff_top_two.nlargest(20)
+        outlier_years = results.loc[outliers_values._index].idxmax(axis=1)
+        plt.scatter(outlier_years, outliers_values)
+        for word in outliers_values._index:
+            plt.annotate(word, (outlier_years[word], outliers_values[word]))
+        for year in self.classes:
+            if year not in outlier_years.values:
+                top_outlier = top_years.where(top_years == year).idxmax()
+                plt.scatter(year, diff_top_two[top_outlier], c='g')
+                plt.annotate(top_outlier, (year, diff_top_two[top_outlier]))
+        plt.xlim((1750, 2050))
         plt.xlabel('Year with highest likelihood')
-        plt.ylabel('Variance of log-likelihood')
+        plt.ylabel('Difference in log-likelihood of top two years')
+
+        # heatmap
         plt.figure()
-        sns.heatmap(results)
+        sns.heatmap(results.loc[var.nlargest(50)._index])
         plt.yticks(rotation=0)
         plt.show()
+
+    def outlying(self, row, iq_range=.5):
+        pcnt = (1 - iq_range) / 2
+        qlow, median, qhigh = row.quantile([pcnt, 0.50, 1 - pcnt])
+        iqr = qhigh - qlow
+        return row.max() - iqr
