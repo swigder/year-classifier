@@ -8,11 +8,11 @@ Classify which year a text was written using multiple methods
 ```pip3 install -r requirements.txt```
 
 ### Command
-```python3 sk_learn/__main__.py <dataset_directory_path> -t bayes -s 1000```
+```python3 sk_learn <dataset_directory_path> -t bayes -s 1000```
 
 For additional options, run:
 
-```python3 sk_learn/__main__.py --help```
+```python3 sk_learn --help```
 
 ## Run complex models
 
