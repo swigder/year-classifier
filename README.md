@@ -16,4 +16,4 @@ TensorFlow and Keras has to be installed
 See [TensorFlow installation page](https://www.tensorflow.org/install/) and [Keras installation page](https://keras.io/#installation)
 
 ### Command
-python3 classifier.py [conv|multiconv|lstm]
+python3 runeberg/classifier.py [conv|multiconv|lstm]
