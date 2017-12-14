@@ -2,8 +2,6 @@
 
 Classify which year a text was written using multiple methods
 
-### How to run
-
 ## Run simple models (sk-learn)
 
 ### Requirements
