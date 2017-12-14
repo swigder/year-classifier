@@ -37,7 +37,7 @@ if args.report is None:
 
     model = Model(model_type=args.model_type)
     model.train(data.train)
-    model.test(data.test)
+    model.test(data.test, visualize=args.visualize)
     if args.visualize and args.model_type == Model.NAIVE_BAYES:
         visualizer = ModelVisualizer(model)
         visualizer.visualize_naive_bayes()

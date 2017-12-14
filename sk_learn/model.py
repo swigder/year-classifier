@@ -1,5 +1,8 @@
 import numpy as np
 import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
 from sklearn import metrics
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 from sklearn.linear_model import SGDClassifier, SGDRegressor
@@ -67,7 +70,7 @@ class Model:
             print()
             print('Vocabulary size: {} ({} words removed)'.format(len(v.vocabulary_), len(v.stop_words_)))
 
-    def test(self, test):
+    def test(self, test, visualize=False):
         inputs = list(test.inputs)
 
         predicted = self.text_clf.predict(inputs)
@@ -88,5 +91,15 @@ class Model:
                   .format(almost_correct_count / len(inputs), almost_correct_count, len(inputs)))
             print(metrics.classification_report(test.targets, predicted))
             print(metrics.confusion_matrix(test.targets, predicted, list(sorted(set(test.targets)))))
+        if visualize:
+            sns.set()
+            targets = list(sorted(set(test.targets)))
+            confusion_matrix = pd.DataFrame(data=metrics.confusion_matrix(test.targets, predicted),
+                                            index=targets, columns=targets)
+            sns.heatmap(confusion_matrix, annot=True, fmt='d', cbar=False)
+            plt.yticks(rotation=0)
+            plt.xlabel('Predicted value')
+            plt.ylabel('Actual value')
+            plt.show()
 
         return correct_count / len(inputs)
