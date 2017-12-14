@@ -10,19 +10,34 @@ Data = namedtuple('Data', ['train', 'test'])
 DataSet = namedtuple('DataSet', ['inputs', 'targets'])
 
 
-def data_set(data):
-    return DataSet(inputs=inputs(data), targets=targets(data))
+def data_from_dicts(train, test, reusable=False):
+    return Data(train=data_set(train, reusable=reusable), test=data_set(test, reusable=reusable))
 
 
-def inputs(data):
-    return itertools.chain.from_iterable(data.values())
+def data_set(data, reusable=False):
+    return DataSet(inputs=inputs(data, reusable), targets=targets(data))
+
+
+def inputs(data, reusable=False):
+    iterable = itertools.chain.from_iterable(data.values())
+    return iterable if not reusable else list(iterable)
 
 
 def targets(data):
         return list(itertools.chain.from_iterable([[target] * len(items) for target, items in data.items()]))
 
 
-def read_dir_into_dict(data_dir, max_samples_per_period=None, min_sample_size=None):
+def split_data(data, percent=.9):
+    training = dict()
+    test = dict()
+    for year, lines in data.items():
+        cutoff = int(len(lines) * percent)
+        training[year] = lines[cutoff:]
+        test[year] = lines[:cutoff]
+    return training, test
+
+
+def read_dir_into_data_set(data_dir, min_sample_size, max_samples_per_period=None):
     data_dict = defaultdict(list)
     for filename in os.listdir(data_dir):
         if not filename.endswith('.txt'):
@@ -46,9 +61,15 @@ def read_dir_into_dict(data_dir, max_samples_per_period=None, min_sample_size=No
     return data_dict
 
 
-def read_data(data_dir, max_samples_per_period, period_length, min_sample_size=None):
-    args = {'max_samples_per_period': max_samples_per_period, 'min_sample_size': min_sample_size}
-    train = read_dir_into_dict(data_dir + '/training/', **args)
-    test = read_dir_into_dict(data_dir + '/test/', **args)
+def read_data(data_dir, max_samples_per_period=None, min_sample_size=1000, reusable_input=False, validation_set=False):
+    args = {'max_samples_per_period': max_samples_per_period,
+            'min_sample_size': min_sample_size}
 
-    return Data(train=data_set(train), test=data_set(test))
+    if not validation_set:
+        train = read_dir_into_data_set(data_dir + '/training/', **args)
+        test = read_dir_into_data_set(data_dir + '/test/', **args)
+        return data_from_dicts(train, test, reusable=reusable_input)
+    else:
+        full_data_set = read_dir_into_data_set(data_dir + '/training/', **args)
+        train, test = split_data(full_data_set)
+        return data_from_dicts(train, test, reusable=True)
