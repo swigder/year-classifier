@@ -5,7 +5,9 @@ import time
 
 from files_to_data import read_data
 from model import Model
+from model_visualizer import ModelVisualizer
 from report import generate_report, REPORTS
+
 
 MAX_SAMPLES_PER_PERIOD = 5000
 PERIOD_LENGTH = 20
@@ -24,6 +26,7 @@ parser.add_argument('-t', '--model_type', default=DEFAULT_MODEL_TYPE,
                     help='type of model')
 parser.add_argument('-r', '--report', default=None, choices=REPORTS.keys(),
                     help='type of report')
+parser.add_argument('-v', '--visualize', action='store_true', help='visualize the results')
 
 args = parser.parse_args()
 
@@ -34,7 +37,9 @@ if args.report is None:
 
     model = Model(model_type=args.model_type)
     model.train(data.train)
-    model.visualize()
     model.test(data.test)
+    if args.visualize and args.model_type == Model.NAIVE_BAYES:
+        visualizer = ModelVisualizer(model)
+        visualizer.visualize_naive_bayes()
 else:
     generate_report(args.dir, args.report)
