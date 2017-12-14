@@ -25,16 +25,10 @@ def read_data(filename):
 
 nobn_acc, nobn_loss, nobn_val_acc, nobn_val_loss=read_data(sys.argv[1])
 bn_acc, bn_loss, bn_val_acc, bn_val_loss=read_data(sys.argv[2])
-#print(noln_acc.shape)
-#sys.exit()
-#print('acc',acc[:10])
-#print('loss', loss[:10])
-#print('loss 0',loss[:10, 0])
-#print('loss 1',loss[:10, 1])
 
 plt.figure(1)
 plt.title('Accuracy with and without batch normalization')
-#sys.exit()
+
 # Training acc
 plt.plot(range(len(nobn_acc)), nobn_acc, 'g')
 # Validation acc

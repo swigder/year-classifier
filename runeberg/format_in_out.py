@@ -1,4 +1,3 @@
-#from keras.preprocessing.text import text_to_word_sequence, one_hot
 import os
 from os.path import join, isfile
 from sklearn.feature_extraction.text import CountVectorizer
@@ -48,7 +47,6 @@ class Format:
         for d in data:
             # Split all sentences into lists of words, if-statement is to remove empty strings
             split_sentences=[list(filter(lambda x: len(x)>0, [w for w in tokenizer(s) if w in vocab and w!='' and w!=' '])) for s in d[1]]
-            #print(year, len(sentences))
             x=x+split_sentences
             y=y+[[d[0]] for i in range(len(split_sentences))]
 
@@ -58,8 +56,6 @@ class Format:
     def get_formated_data(self, offset, word_to_ind=None, label_tr=None):
         x, y, unique_words, labels = self.get_input_output()
         print(labels)
-        #print(unique_words[1:100])
-        #print(x[0:4])
         if word_to_ind==None:
             word_to_ind={}
             ind_to_word={}
@@ -71,14 +67,12 @@ class Format:
         else:
             ind_to_word=None
 
-        #unique_words=dict.fromkeys(unique_words, 0)
         if label_tr!=None:
             labels=label_tr
 
         new_x=self.convert_to_indices(x, word_to_ind)
         label_dict={k:i for i, k in enumerate(labels)}
         new_y=self.convert_to_indices(y, label_dict)
-        #print(x[0:5])
         return new_x, new_y, word_to_ind, ind_to_word, labels
 
     def keras_enc(self):

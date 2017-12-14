@@ -37,8 +37,6 @@ from multi_conv_model import MultiConvModel
 from lstm_model import LstmModel
 
 # Load data
-#x, y, word_to_ind, ind_to_word, labels=Format('/tmp/dataset-1/training').get_formated_data(0)
-#x_test, y_test, word_to_ind_test, ind_to_word_test, labels_test=Format('/tmp/dataset-1/test').get_formated_data(0)
 data_folder_name='/tmp/dataset-p2-s30000-min100-max2000' #'/tmp/dataset-p2-s10000-min100-max1000'
 x, y, word_to_ind, ind_to_word, labels=Format(data_folder_name+'/training').get_formated_data(0)
 x_test, y_test, word_to_ind_test, ind_to_word_test, labels_test=Format(data_folder_name+'/test').get_formated_data(0, word_to_ind, labels)
@@ -66,7 +64,6 @@ def to_onehot(z):
 
     return z_new
 
-#print(y_new[0:10])
 y=to_onehot(y)
 y_test=to_onehot(y_test)
 
@@ -79,32 +76,7 @@ x=x_tot[0:len(x)]
 x_test=x_tot[len(x):]
 x_test=np.array(x_test)
 
-# Shuffle training samples
-perm=np.random.permutation(x.shape[0])
-x=x[perm]
-y=y[perm]
-
-
-"""
-x_test=x_test[0:TEST_SIZE]
-y_test=y_test[0:TEST_SIZE]
-x=x[TEST_SIZE:TEST_SIZE+TRAIN_SIZE]
-y=y[TEST_SIZE:TEST_SIZE+TRAIN_SIZE]
-"""
-
-perm=np.random.permutation(x_test.shape[0])
-#x_test=x_test[perm]
-#y_test=y_test[perm]
-#x=x[0:5000]
-#y=y[0:5000]
-
 print(x.shape)
-
-#try:
-    #lmo=load_model('/tmp/emb_model.h5')
-#except:
-    #print('embedding model not found')
-
 
 models={'conv':ConvModel, 'multiconv':MultiConvModel, 'lstm':LstmModel}
 
@@ -122,8 +94,6 @@ tb=TensorBoard(log_dir=log_directory, embeddings_freq=1, embeddings_metadata={'e
 
 model.fit(x, y, epochs=NUM_EPOCHS, batch_size=BATCH_SIZE, validation_split=0.2, callbacks=[tb])
 model.save('/tmp/models_{}_{}'.format(model_name, curr_time))
-#print(out[0:100])
-#print(y_test[0:100])
 out=model.predict(x_test)
 score,acc=model.evaluate(x_test,  y_test, batch_size=BATCH_SIZE)
 print(score, acc)

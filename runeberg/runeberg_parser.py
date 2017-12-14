@@ -11,13 +11,10 @@ def parse_file(path):
 
     all_text=''
     for text in soup.find_all('chapter'):
-        #print(text.get('date'))
         t=(text.get_text().replace("\n", " "))
         all_text+=t
 
     s=re.split('(?<=\.)\s+(?=[A-ZÅÄÖ])', all_text)
-    #print(s[:100])
-    #print(len(s))
     return s, year
 
 def save_sentences(path,sentences, year):
