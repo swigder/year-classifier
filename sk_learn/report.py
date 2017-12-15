@@ -1,5 +1,6 @@
 from collections import defaultdict
 
+import itertools
 import pandas as pd
 
 import matplotlib.pyplot as plt
@@ -85,6 +86,31 @@ def generate_min_sample_size_report(data_dir):
             accuracy_results.loc[len(accuracy_results)] = [model_type, min_sample, accuracy]
             print('Got accuracy {}'.format(accuracy))
     print(accuracy_results.sort_values(['Model', 'Min Sample']))
+
+
+def generate_feature_type_report(data_dir):
+    print('Reading data...')
+    data = _read_data(data_dir, {'min_sample_size': 1000})
+
+    model_types = (Model.NAIVE_BAYES, Model.SGD_CLASSIFER, Model.MLP_CLASSIFER)
+    feature_types = {(True, True): 'Boolean * IDF',
+                     (True, False): 'Boolean',
+                     (False, True): 'Tf-idf',
+                     (False, False): 'Count'}
+    accuracies = pd.DataFrame(columns=['Feature Type', *model_types])
+    accuracies.set_index('Feature Type', inplace=True)
+
+    print('Calculating accuracies...')
+    for model_type in model_types:
+        for (binary, tf_idf), feature_description in feature_types.items():
+            vocab_options = {'binary': binary, 'use_tf_idf': tf_idf}
+            model = Model(model_type=model_type, verbose=False, vocab_options=vocab_options)
+            model.train(data.train)
+            accuracy = model.test(data.test)
+            accuracies.at[feature_description, model_type] = accuracy
+            print(feature_description, model_type, accuracy)
+
+    print(accuracies)
 
 
 def generate_bayes_report(data_dir):
@@ -179,7 +205,8 @@ REPORTS = {
     'bayes': generate_bayes_report,
     'mlp': generate_mlp_report,
     'sgd': generate_sgd_report,
-    'df': generate_tf_idf_report
+    'df': generate_tf_idf_report,
+    'ft': generate_feature_type_report
 }
 
 
