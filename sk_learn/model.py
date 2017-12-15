@@ -25,7 +25,7 @@ class Model:
 
         self.text_clf = self.get_pipeline(**vocab_options, model_options=model_options)
 
-    def get_pipeline(self, max_df=.95, min_df=.0001, use_tf_idf=True, binary=False, model_options={}):
+    def get_pipeline(self, max_df=.95, min_df=.0001, use_tf_idf=False, binary=False, model_options={}):
         steps = list()
 
         steps.append(('vect', CountVectorizer(max_df=max_df, min_df=min_df, binary=binary, ngram_range=(1, 1),
