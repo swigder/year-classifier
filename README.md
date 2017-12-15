@@ -2,15 +2,21 @@
 
 Classify which year a text was written using multiple methods
 
+## Generate data sets
+
+To recreate the datasets from scratch, including extracting the year and surface text from ```.xml.bz``` files downloaded from Språkbanken, removing unwanted data, shuffling, and sampling, please see the programs under the ```data``` directory. All are runnable and accept the ```--help``` argument.
+
 ## Run simple models (sk-learn)
 
 ### Requirements
 ```pip3 install -r requirements.txt```
 
 ### Command
+To run the default Bayes model on samples with size 1000 characters, run:
+
 ```python3 sk_learn <dataset_directory_path> -t bayes -s 1000```
 
-For additional options, run:
+To see additional options, run:
 
 ```python3 sk_learn --help```
 
